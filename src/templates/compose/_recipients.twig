@@ -1,0 +1,95 @@
+{% import '_includes/forms' as forms %}
+
+<div class="mailer-recipients" data-mailer-recipients>
+    <p class="light">{{ 'Choose who should receive the message. You can combine any of the options below — each person only gets one email.'|t('mailer') }}</p>
+
+    {# Custom recipients #}
+    <section class="mailer-mode" data-mailer-mode="custom">
+        <div class="mailer-mode__header">
+            {{ hiddenInput('modes[custom]', '') }}
+            <pk-lightswitch name="modes[custom]" value="1" {{ form.sendToCustom ? 'checked' }} data-mailer-mode-toggle="custom">
+                <span class="mailer-mode__title">{{ 'Custom recipients'|t('mailer') }}</span>
+            </pk-lightswitch>
+            <p class="light mailer-mode__description">{{ 'Send one email to the addresses below.'|t('mailer') }}</p>
+        </div>
+        <div class="mailer-mode__body" data-mailer-mode-body="custom" {{ not form.sendToCustom ? 'hidden' }}>
+            {% set addressHelp = 'Separate addresses with commas, semicolons or new lines. Names are allowed, e.g. `Jane Doe <jane@example.com>`.'|t('mailer') %}
+            {% for field in [
+                {name: 'customTo', label: 'To'|t('mailer'), required: true, instructions: addressHelp},
+                {name: 'customCc', label: 'CC'|t('mailer')},
+                {name: 'customBcc', label: 'BCC'|t('mailer')},
+            ] %}
+                <pk-field label="{{ field.label }}" for="mailer-{{ field.name }}" {{ (field.required ?? false) ? 'required' }} instructions="{{ field.instructions ?? '' }}">
+                    <pk-textarea
+                        id="mailer-{{ field.name }}"
+                        name="{{ field.name }}"
+                        rows="2"
+                        value="{{ attribute(form, field.name) }}"
+                        {{ form.hasErrors(field.name) ? 'invalid' }}
+                        data-mailer-count-input
+                    ></pk-textarea>
+                    {% include 'mailer/_components/errors' with {errors: form.getErrors(field.name)} only %}
+                </pk-field>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# User groups #}
+    <section class="mailer-mode" data-mailer-mode="groups">
+        <div class="mailer-mode__header">
+            {{ hiddenInput('modes[groups]', '') }}
+            <pk-lightswitch name="modes[groups]" value="1" {{ form.sendToGroups ? 'checked' }} data-mailer-mode-toggle="groups">
+                <span class="mailer-mode__title">{{ 'User groups'|t('mailer') }}</span>
+            </pk-lightswitch>
+            <p class="light mailer-mode__description">{{ 'Send an email to each user in the selected groups.'|t('mailer') }}</p>
+        </div>
+        <div class="mailer-mode__body" data-mailer-mode-body="groups" {{ not form.sendToGroups ? 'hidden' }}>
+            {% set selectedGroups = form.groupIds|map(id => id ~ '') %}
+            <pk-field label="{{ 'Groups'|t('mailer') }}" required>
+                <div class="mailer-checkboxes">
+                    <pk-checkbox name="groupIds[]" checkboxvalue="admins" {{ 'admins' in selectedGroups ? 'checked' }} data-mailer-count-input>
+                        {{ 'Admins'|t('mailer') }}
+                    </pk-checkbox>
+                    {% for group in groups %}
+                        <pk-checkbox name="groupIds[]" checkboxvalue="{{ group.id }}" {{ (group.id ~ '') in selectedGroups ? 'checked' }} data-mailer-count-input>
+                            {{ group.name|t('site') }}
+                        </pk-checkbox>
+                    {% endfor %}
+                </div>
+                {% include 'mailer/_components/errors' with {errors: form.getErrors('groupIds')} only %}
+            </pk-field>
+        </div>
+    </section>
+
+    {# Individual users #}
+    <section class="mailer-mode" data-mailer-mode="users">
+        <div class="mailer-mode__header">
+            {{ hiddenInput('modes[users]', '') }}
+            <pk-lightswitch name="modes[users]" value="1" {{ form.sendToUsers ? 'checked' }} data-mailer-mode-toggle="users">
+                <span class="mailer-mode__title">{{ 'Users'|t('mailer') }}</span>
+            </pk-lightswitch>
+            <p class="light mailer-mode__description">{{ 'Send an email to each of the selected users.'|t('mailer') }}</p>
+        </div>
+        <div class="mailer-mode__body" data-mailer-mode-body="users" {{ not form.sendToUsers ? 'hidden' }}>
+            {{ forms.elementSelectField({
+                label: 'Users'|t('mailer'),
+                id: 'mailer-users',
+                name: 'userIds',
+                elementType: 'craft\\elements\\User',
+                selectionLabel: 'Add a user'|t('mailer'),
+                elements: users,
+                limit: null,
+                required: true,
+                errors: form.getErrors('userIds'),
+                showSiteMenu: false,
+            }) }}
+        </div>
+    </section>
+
+    <div class="mailer-summary" data-mailer-summary>
+        <div class="mailer-summary__text" data-mailer-summary-text aria-live="polite"></div>
+        {% if canExport %}
+            <pk-button size="sm" data-mailer-export>{{ 'Export selected users (CSV)'|t('mailer') }}</pk-button>
+        {% endif %}
+    </div>
+</div>

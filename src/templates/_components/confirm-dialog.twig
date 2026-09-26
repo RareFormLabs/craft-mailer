@@ -1,0 +1,15 @@
+<pk-dialog class="mailer-confirm-dialog" label="{{ 'Send email'|t('mailer') }}" disable-pointer-dismissal data-mailer-confirm-dialog>
+    <div data-mailer-confirm-body>
+        <p><strong data-mailer-confirm-title></strong></p>
+        <p data-mailer-confirm-message></p>
+        <ul class="mailer-confirm-breakdown" data-mailer-confirm-breakdown></ul>
+        <p class="warning has-icon" data-mailer-confirm-test hidden>
+            <span class="icon" aria-hidden="true"></span>
+            <span data-mailer-confirm-test-text></span>
+        </p>
+    </div>
+    <div slot="footer" class="mailer-dialog-footer">
+        <pk-button data-mailer-dialog-close>{{ 'Cancel'|t('app') }}</pk-button>
+        <pk-button variant="primary" data-mailer-confirm-submit>{{ 'Send'|t('mailer') }}</pk-button>
+    </div>
+</pk-dialog>

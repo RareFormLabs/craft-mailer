@@ -1,0 +1,59 @@
+{% import '_includes/forms' as forms %}
+
+<div class="meta mailer-meta">
+    <div class="mailer-meta__fields">
+        <pk-field label="{{ 'Sender Name'|t('mailer') }}" for="mailer-fromName">
+            <pk-input id="mailer-fromName" name="fromName" value="{{ form.fromName }}" {{ not canChangeSender ? 'readonly' }} {{ form.hasErrors('fromName') ? 'invalid' }}></pk-input>
+            {% include 'mailer/_components/errors' with {errors: form.getErrors('fromName')} only %}
+        </pk-field>
+
+        <pk-field label="{{ 'Sender Email'|t('mailer') }}" for="mailer-fromEmail" required>
+            <pk-input id="mailer-fromEmail" type="email" name="fromEmail" value="{{ form.fromEmail }}" {{ not canChangeSender ? 'readonly' }} {{ form.hasErrors('fromEmail') ? 'invalid' }}></pk-input>
+            {% include 'mailer/_components/errors' with {errors: form.getErrors('fromEmail')} only %}
+        </pk-field>
+
+        <pk-field label="{{ 'Reply-To'|t('mailer') }}" for="mailer-replyTo">
+            <pk-input id="mailer-replyTo" type="email" name="replyTo" value="{{ form.replyTo }}" placeholder="{{ 'Optional'|t('mailer') }}" {{ form.hasErrors('replyTo') ? 'invalid' }}></pk-input>
+            {% include 'mailer/_components/errors' with {errors: form.getErrors('replyTo')} only %}
+        </pk-field>
+    </div>
+</div>
+
+<div class="meta mailer-meta">
+    <div class="mailer-meta__fields">
+        {{ forms.elementSelectField({
+            label: 'Attachments'|t('mailer'),
+            id: 'mailer-assets',
+            name: 'assetIds',
+            elementType: 'craft\\elements\\Asset',
+            selectionLabel: 'Add an asset'|t('mailer'),
+            elements: assets,
+            limit: null,
+            viewMode: 'list',
+            errors: form.getErrors('assetIds'),
+        }) }}
+
+        <pk-field
+            label="{{ 'Upload files'|t('mailer') }}"
+            for="mailer-uploads"
+            instructions="{{ settings.maxAttachmentSize ? 'Up to {size} in total, including assets.'|t('mailer', {size: settings.maxAttachmentSize|filesize}) : '' }}"
+        >
+            <input type="file" id="mailer-uploads" name="uploads[]" multiple class="mailer-file-input" data-mailer-uploads>
+            {% include 'mailer/_components/errors' with {errors: form.getErrors('uploads')} only %}
+        </pk-field>
+    </div>
+</div>
+
+{% if testToEmailAddress %}
+    <div class="meta mailer-meta mailer-test-mode">
+        <p class="warning has-icon">
+            <span class="icon" aria-hidden="true"></span>
+            <span>{{ 'Test mode is on. All emails will be sent to {address}, without CC or BCC.'|t('mailer', {address: testToEmailAddress}) }}</span>
+        </p>
+    </div>
+{% endif %}
+
+<div class="meta mailer-meta mailer-actions">
+    <pk-button data-mailer-preview>{{ 'Preview'|t('mailer') }}</pk-button>
+    <pk-button data-mailer-test title="{{ 'Send a test email to {email}'|t('mailer', {email: currentUser.email}) }}">{{ 'Send test to me'|t('mailer') }}</pk-button>
+</div>

@@ -1,0 +1,64 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Logs'|t('mailer') %}
+{% set docTitle = title ~ ' – ' ~ craft.app.plugins.getPlugin('mailer').settings.name|t('mailer') %}
+{% set selectedSubnavItem = 'logs' %}
+
+{% block actionButton %}
+    {% if canManage and sends|length %}
+        <form method="post" data-mailer-confirm="{{ 'Are you sure you want to delete all completed logs?'|t('mailer') }}">
+            {{ csrfInput() }}
+            {{ actionInput('mailer/logs/clear') }}
+            <button type="submit" class="btn">{{ 'Clear logs'|t('mailer') }}</button>
+        </form>
+    {% endif %}
+    {% if canSend %}
+        <a class="btn submit add icon" href="{{ cpUrl('mailer') }}">{{ 'Compose'|t('mailer') }}</a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if sends|length %}
+        <div class="tableview">
+            <table class="data fullwidth mailer-logs">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ 'Subject'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Status'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Recipients'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Sent'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Failed'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Skipped'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Sender'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Created'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Finished'|t('mailer') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for send in sends %}
+                        {% set sender = send.sender %}
+                        <tr>
+                            <th scope="row" data-title="{{ 'Subject'|t('mailer') }}">
+                                <a href="{{ send.cpUrl }}">{{ send.subject }}</a>
+                                {% if send.description %}<div class="smalltext light">{{ send.description }}</div>{% endif %}
+                            </th>
+                            <td data-title="{{ 'Status'|t('mailer') }}">{% include 'mailer/_components/status' %}</td>
+                            <td data-title="{{ 'Recipients'|t('mailer') }}">{{ send.totalRecipients|number }}</td>
+                            <td data-title="{{ 'Sent'|t('mailer') }}">{{ send.sentCount|number }}</td>
+                            <td data-title="{{ 'Failed'|t('mailer') }}">{{ send.failedCount ? send.failedCount|number : '–' }}</td>
+                            <td data-title="{{ 'Skipped'|t('mailer') }}">{{ send.skippedCount ? send.skippedCount|number : '–' }}</td>
+                            <td data-title="{{ 'Sender'|t('mailer') }}">{{ sender ? sender.friendlyName : '–' }}</td>
+                            <td data-title="{{ 'Created'|t('mailer') }}">{{ send.dateCreated ? send.dateCreated|datetime('short') : '–' }}</td>
+                            <td data-title="{{ 'Finished'|t('mailer') }}">{{ send.dateFinished ? send.dateFinished|datetime('short') : '–' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'mailer/_components/pagination' with {params: {}} %}
+    {% else %}
+        <div class="zilch">
+            <p>{{ 'Nothing has been sent yet.'|t('mailer') }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

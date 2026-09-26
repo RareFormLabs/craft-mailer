@@ -1,0 +1,31 @@
+<details class="mailer-variables">
+    <summary>{{ 'List of variables'|t('mailer') }}</summary>
+    <p class="light">
+        {% if settings.safeMode %}
+            {{ 'These variables can be used in the subject and message. For recipients who don’t have a user account, only the email address is available.'|t('mailer') }}
+        {% else %}
+            {{ 'These variables can be used in the subject and message, along with basic Twig tags (if, set) and filters. For recipients who don’t have a user account, only the email address is available.'|t('mailer') }}
+        {% endif %}
+    </p>
+    <table class="data fullwidth mailer-variables-table">
+        <thead>
+            <tr>
+                <th scope="col">{{ 'Variable'|t('mailer') }}</th>
+                <th scope="col">{{ 'Code'|t('mailer') }}</th>
+                <th scope="col" class="thin"><span class="visually-hidden">{{ 'Actions'|t('app') }}</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for variable in variables %}
+                {% set code = '{{ ' ~ variable.token ~ ' }}' %}
+                <tr>
+                    <td>{{ variable.label }}</td>
+                    <td><code class="mailer-token">{{ code }}</code></td>
+                    <td class="thin">
+                        <pk-button size="sm" data-mailer-insert="{{ variable.token }}">{{ 'Insert'|t('mailer') }}</pk-button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</details>

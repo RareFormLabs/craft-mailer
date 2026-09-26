@@ -1,0 +1,237 @@
+/* Mailer control panel styles. Plugin Kit supplies the component styling; this only handles layout. */
+
+.mailer-fields,
+.mailer-recipients,
+.mailer-settings {
+    display: flex;
+    flex-direction: column;
+    gap: var(--l, 24px);
+    max-width: 960px;
+}
+
+.mailer-settings hr {
+    margin: 0;
+}
+
+.mailer-tabs {
+    display: block;
+}
+
+.mailer-tabs > pk-tab-panel {
+    padding-block-start: var(--l, 24px);
+}
+
+.mailer-count-badge {
+    display: inline-block;
+    min-width: 1.5em;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--gray-100, #eef0f3);
+    color: var(--gray-600, #596673);
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+}
+
+.mailer-tab-error {
+    display: inline-block;
+    min-width: 1.5em;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--red-050, #fef2f2);
+    color: var(--error-color, #cf1124);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+}
+
+.mailer-form-errors {
+    margin-block-end: var(--m, 14px);
+}
+
+.mailer-token {
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.mailer-variables {
+    border: 1px solid var(--hairline-color, rgba(51, 64, 77, 0.1));
+    border-radius: var(--large-border-radius, 5px);
+    padding: var(--s, 10px) var(--m, 14px);
+}
+
+.mailer-variables > summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.mailer-variables[open] > summary {
+    margin-block-end: var(--s, 10px);
+}
+
+.mailer-variables-table td,
+.mailer-variables-table th {
+    vertical-align: middle;
+}
+
+.mailer-mode {
+    border: 1px solid var(--hairline-color, rgba(51, 64, 77, 0.1));
+    border-radius: var(--large-border-radius, 5px);
+    padding: var(--m, 14px);
+}
+
+.mailer-mode__header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mailer-mode__title {
+    font-weight: 600;
+}
+
+.mailer-mode__description {
+    margin: 0;
+    padding-inline-start: 44px;
+}
+
+.mailer-mode__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--m, 14px);
+    margin-block-start: var(--m, 14px);
+}
+
+.mailer-mode__body[hidden] {
+    display: none;
+}
+
+.mailer-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+}
+
+.mailer-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s, 10px);
+    padding: var(--s, 10px) var(--m, 14px);
+    border-radius: var(--large-border-radius, 5px);
+    background: var(--gray-050, #f3f7fc);
+}
+
+.mailer-summary__text {
+    font-weight: 600;
+}
+
+.mailer-meta__fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--m, 14px);
+    padding: var(--m, 14px) var(--l, 24px);
+}
+
+.mailer-meta__fields .field {
+    margin: 0;
+}
+
+.mailer-file-input {
+    max-width: 100%;
+    font-size: 13px;
+}
+
+.mailer-test-mode p,
+.mailer-actions {
+    margin: 0;
+    padding: var(--m, 14px) var(--l, 24px);
+}
+
+.mailer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s, 10px);
+}
+
+.mailer-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--s, 10px);
+}
+
+.mailer-preview-dialog__intro {
+    margin-block-start: 0;
+}
+
+.mailer-preview-dialog__subject {
+    display: flex;
+    gap: var(--s, 10px);
+    margin: 0 0 var(--m, 14px);
+}
+
+.mailer-preview-dialog__subject dt {
+    font-weight: 600;
+}
+
+.mailer-preview-dialog__subject dd {
+    margin: 0;
+}
+
+.mailer-preview-frame {
+    display: block;
+    width: 100%;
+    height: min(60vh, 640px);
+    border: 1px solid var(--hairline-color, rgba(51, 64, 77, 0.1));
+    border-radius: var(--large-border-radius, 5px);
+    background: #fff;
+}
+
+.mailer-preview-text {
+    max-height: min(60vh, 640px);
+    overflow: auto;
+    margin: 0;
+    padding: var(--m, 14px);
+    border-radius: var(--large-border-radius, 5px);
+    background: var(--gray-050, #f3f7fc);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.mailer-confirm-breakdown {
+    margin: 0 0 var(--m, 14px);
+    padding-inline-start: 1.25em;
+    list-style: disc;
+}
+
+.mailer-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.mailer-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-block-end: var(--m, 14px);
+}
+
+.mailer-filters .btn.active {
+    background: var(--gray-200, #dfe5ec);
+}
+
+.mailer-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--m, 14px);
+    margin-block-start: var(--l, 24px);
+}
+
+.mailer-recipients-table td.error {
+    color: var(--error-color, #cf1124);
+}

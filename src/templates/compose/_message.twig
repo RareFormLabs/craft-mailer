@@ -1,0 +1,53 @@
+{% set toolbar = [
+    {type: 'group', preset: 'formatting', headingLevels: [2, 3, 4]},
+    '|', 'bold', 'italic', 'underline', 'strikethrough',
+    '|', 'link',
+    '|', 'unordered-list', 'ordered-list', 'blockquote', 'hr',
+    '|', 'align-left', 'align-center', 'align-right',
+    '|', 'clear-format', 'undo', 'redo',
+] %}
+
+<div class="mailer-fields">
+    <pk-field label="{{ 'Subject'|t('mailer') }}" required for="mailer-subject">
+        <pk-input
+            id="mailer-subject"
+            name="subject"
+            value="{{ form.subject }}"
+            maxlength="255"
+            required
+            {{ form.hasErrors('subject') ? 'invalid' }}
+            data-mailer-subject
+        ></pk-input>
+        {% include 'mailer/_components/errors' with {errors: form.getErrors('subject')} only %}
+    </pk-field>
+
+    <pk-field
+        label="{{ 'Message'|t('mailer') }}"
+        required
+        instructions="{{ 'Use the Variables menu to personalize the message for each recipient.'|t('mailer') }}"
+    >
+        <pk-tiptap-editor
+            name="bodyJson"
+            value="{{ form.bodyJson }}"
+            rows="14"
+            toolbar="{{ toolbar|json_encode }}"
+            toolbar-tooltips
+            required
+            {{ form.hasErrors('bodyJson') ? 'invalid' }}
+            data-mailer-body
+        >
+            <pk-dropdown-menu slot="toolbar-end" placement="bottom-end" data-mailer-variables-menu>
+                <pk-button slot="trigger" size="sm" variant="transparent" with-caret>{{ 'Variables'|t('mailer') }}</pk-button>
+                {% for variable in variables %}
+                    <pk-dropdown-item value="{{ variable.token }}">
+                        {{ variable.label }}
+                        <code slot="details" class="mailer-token">{{ '{{ ' ~ variable.token ~ ' }}' }}</code>
+                    </pk-dropdown-item>
+                {% endfor %}
+            </pk-dropdown-menu>
+        </pk-tiptap-editor>
+        {% include 'mailer/_components/errors' with {errors: form.getErrors('bodyJson')} only %}
+    </pk-field>
+
+    {% include 'mailer/_components/variables' %}
+</div>

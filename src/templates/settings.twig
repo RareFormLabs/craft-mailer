@@ -1,0 +1,81 @@
+{% macro overrideWarning(key, overrides) %}
+    {{- key in overrides ? 'This is being overridden by the `{setting}` setting in `config/mailer.php`.'|t('mailer', {setting: key}) : '' -}}
+{% endmacro %}
+{% from _self import overrideWarning %}
+
+{% set errors = settings.getErrors() %}
+
+<div class="mailer-settings">
+    <pk-field
+        label="{{ 'Plugin Name'|t('mailer') }}"
+        instructions="{{ 'How the plugin is named in the control panel navigation.'|t('mailer') }}"
+        for="name"
+        required
+        warning="{{ overrideWarning('name', overrides) }}"
+    >
+        <pk-input id="name" name="name" value="{{ settings.name }}" maxlength="50" required {{ 'name' in overrides ? 'disabled' }} {{ settings.hasErrors('name') ? 'invalid' }}></pk-input>
+        {% include 'mailer/_components/errors' with {errors: settings.getErrors('name')} only %}
+    </pk-field>
+
+    <hr>
+
+    <pk-field
+        label="{{ 'Safe Mode'|t('mailer') }}"
+        instructions="{{ 'Only allow the listed variables (like `{{ user.firstName }}`) in messages. When off, messages can use basic Twig (`if` and `set` tags and common filters) in a sandbox.'|t('mailer') }}"
+        warning="{{ overrideWarning('safeMode', overrides) }}"
+    >
+        {% if 'safeMode' not in overrides %}{{ hiddenInput('safeMode', '') }}{% endif %}
+        <pk-lightswitch name="safeMode" value="1" {{ settings.safeMode ? 'checked' }} {{ 'safeMode' in overrides ? 'disabled' }}></pk-lightswitch>
+    </pk-field>
+
+    <pk-field
+        label="{{ 'Use Email Template'|t('mailer') }}"
+        instructions="{{ 'Wrap messages in the HTML email template configured in Settings → Email (or Craft’s default template).'|t('mailer') }}"
+        warning="{{ overrideWarning('useEmailTemplate', overrides) }}"
+    >
+        {% if 'useEmailTemplate' not in overrides %}{{ hiddenInput('useEmailTemplate', '') }}{% endif %}
+        <pk-lightswitch name="useEmailTemplate" value="1" {{ settings.useEmailTemplate ? 'checked' }} {{ 'useEmailTemplate' in overrides ? 'disabled' }}></pk-lightswitch>
+    </pk-field>
+
+    <hr>
+
+    <pk-field
+        label="{{ 'Batch Mode'|t('mailer') }}"
+        instructions="{{ 'Send emails in batches, waiting between each batch. Useful when your email provider limits how many emails you can send per minute or hour.'|t('mailer') }}"
+        warning="{{ overrideWarning('batchMode', overrides) }}"
+    >
+        {% if 'batchMode' not in overrides %}{{ hiddenInput('batchMode', '') }}{% endif %}
+        <pk-lightswitch name="batchMode" value="1" {{ settings.batchMode ? 'checked' }} {{ 'batchMode' in overrides ? 'disabled' }}></pk-lightswitch>
+    </pk-field>
+
+    <pk-field
+        label="{{ 'Emails per Batch'|t('mailer') }}"
+        for="batchMails"
+        warning="{{ overrideWarning('batchMails', overrides) }}"
+    >
+        <pk-input id="batchMails" type="number" name="batchMails" value="{{ settings.batchMails }}" min="1" max="10000" step="1" {{ 'batchMails' in overrides ? 'disabled' }} {{ settings.hasErrors('batchMails') ? 'invalid' }}></pk-input>
+        {% include 'mailer/_components/errors' with {errors: settings.getErrors('batchMails')} only %}
+    </pk-field>
+
+    <pk-field
+        label="{{ 'Wait Between Batches'|t('mailer') }}"
+        instructions="{{ 'In seconds.'|t('mailer') }}"
+        for="batchTime"
+        warning="{{ overrideWarning('batchTime', overrides) }}"
+    >
+        <pk-input id="batchTime" type="number" name="batchTime" value="{{ settings.batchTime }}" min="1" max="86400" step="1" {{ 'batchTime' in overrides ? 'disabled' }} {{ settings.hasErrors('batchTime') ? 'invalid' }}></pk-input>
+        {% include 'mailer/_components/errors' with {errors: settings.getErrors('batchTime')} only %}
+    </pk-field>
+
+    <hr>
+
+    <pk-field
+        label="{{ 'Max Attachment Size'|t('mailer') }}"
+        instructions="{{ 'The maximum combined size of all attachments, in bytes. Set to 0 for no limit (your email provider will still have one).'|t('mailer') }}"
+        for="maxAttachmentSize"
+        warning="{{ overrideWarning('maxAttachmentSize', overrides) }}"
+    >
+        <pk-input id="maxAttachmentSize" type="number" name="maxAttachmentSize" value="{{ settings.maxAttachmentSize }}" min="0" step="1" {{ 'maxAttachmentSize' in overrides ? 'disabled' }} {{ settings.hasErrors('maxAttachmentSize') ? 'invalid' }}></pk-input>
+        {% include 'mailer/_components/errors' with {errors: settings.getErrors('maxAttachmentSize')} only %}
+    </pk-field>
+</div>

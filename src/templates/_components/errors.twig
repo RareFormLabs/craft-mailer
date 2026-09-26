@@ -1,0 +1,4 @@
+{#- Slotted error list items for a pk-field -#}
+{% for error in errors ?? [] %}
+    <li slot="errors">{{ error }}</li>
+{% endfor %}

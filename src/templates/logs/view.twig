@@ -1,0 +1,232 @@
+{% extends '_layouts/cp' %}
+
+{% set title = send.subject %}
+{% set selectedSubnavItem = 'logs' %}
+{% set crumbs = [
+    {label: craft.app.plugins.getPlugin('mailer').settings.name|t('mailer'), url: cpUrl('mailer/logs')},
+    {label: 'Logs'|t('mailer'), url: cpUrl('mailer/logs')},
+] %}
+{% set statuses = {
+    '': 'All'|t('mailer'),
+    sent: 'Sent'|t('mailer'),
+    failed: 'Failed'|t('mailer'),
+    skipped: 'Skipped'|t('mailer'),
+    pending: 'Pending'|t('mailer'),
+} %}
+
+{% block actionButton %}
+    <div class="flex">
+        {% if canManage and send.isActive %}
+            <form method="post" data-mailer-confirm="{{ 'Are you sure you want to cancel this send?'|t('mailer') }}">
+                {{ csrfInput() }}
+                {{ actionInput('mailer/logs/cancel') }}
+                {{ hiddenInput('sendId', send.id) }}
+                <button type="submit" class="btn">{{ 'Cancel send'|t('mailer') }}</button>
+            </form>
+        {% endif %}
+        {% if canManage and isStalled %}
+            <form method="post">
+                {{ csrfInput() }}
+                {{ actionInput('mailer/logs/resume') }}
+                {{ hiddenInput('sendId', send.id) }}
+                <button type="submit" class="btn">{{ 'Resume'|t('mailer') }}</button>
+            </form>
+        {% endif %}
+        {% if canManage and not send.isActive %}
+            <form method="post" data-mailer-confirm="{{ 'Are you sure you want to delete this log?'|t('mailer') }}">
+                {{ csrfInput() }}
+                {{ actionInput('mailer/logs/delete') }}
+                {{ hiddenInput('sendId', send.id) }}
+                <button type="submit" class="btn">{{ 'Delete'|t('app') }}</button>
+            </form>
+        {% endif %}
+        {% if canSend %}
+            <a class="btn submit" href="{{ cpUrl('mailer', {template: send.id}) }}">{{ 'Use as template'|t('mailer') }}</a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+    {% if send.isActive %}
+        <div data-mailer-autorefresh="10"></div>
+    {% endif %}
+
+    {% if isStalled %}
+        <p class="warning has-icon">
+            <span class="icon" aria-hidden="true"></span>
+            <span>{{ 'This send has stopped making progress. Check the queue for failed jobs, then resume it.'|t('mailer') }}</span>
+        </p>
+    {% endif %}
+
+    <pk-tabs value="{{ craft.app.request.getQueryParam('status') is not null or craft.app.request.getQueryParam('page') ? 'recipients' : 'message' }}" class="mailer-tabs">
+        <pk-tab slot="nav" value="message">{{ 'Message'|t('mailer') }}</pk-tab>
+        <pk-tab slot="nav" value="recipients">
+            {{ 'Recipients'|t('mailer') }}
+            {% if send.failedCount %}<span slot="status" class="mailer-tab-error">{{ send.failedCount }}</span>{% endif %}
+        </pk-tab>
+
+        <pk-tab-panel value="message">
+            <dl class="mailer-preview-dialog__subject">
+                <dt>{{ 'Subject'|t('mailer') }}</dt>
+                <dd>{{ send.subject }}</dd>
+            </dl>
+            <iframe class="mailer-preview-frame" sandbox="" title="{{ 'Message'|t('mailer') }}" srcdoc="{{ send.bodyHtml }}"></iframe>
+            <details class="mailer-variables">
+                <summary>{{ 'Plain text'|t('mailer') }}</summary>
+                <pre class="mailer-preview-text">{{ send.bodyText }}</pre>
+            </details>
+        </pk-tab-panel>
+
+        <pk-tab-panel value="recipients">
+            <nav class="mailer-filters" aria-label="{{ 'Filter by status'|t('mailer') }}">
+                {% for key, label in statuses %}
+                    <a class="btn small {{ (status ?? '') == key ? 'active' }}" href="{{ send.cpUrl ~ (key ? '?status=' ~ key : '?status=') }}">{{ label }}</a>
+                {% endfor %}
+            </nav>
+
+            {% if recipients|length %}
+                <div class="tableview">
+                    <table class="data fullwidth mailer-recipients-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">{{ 'Recipient'|t('mailer') }}</th>
+                                <th scope="col">{{ 'Source'|t('mailer') }}</th>
+                                <th scope="col">{{ 'Status'|t('mailer') }}</th>
+                                <th scope="col">{{ 'Details'|t('mailer') }}</th>
+                                <th scope="col">{{ 'Sent'|t('mailer') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recipient in recipients %}
+                                <tr>
+                                    <th scope="row" data-title="{{ 'Recipient'|t('mailer') }}">
+                                        {% if recipient.userId %}
+                                            <a href="{{ cpUrl('users/' ~ recipient.userId) }}">{{ recipient.name ?: recipient.email }}</a>
+                                            {% if recipient.name %}<div class="smalltext light">{{ recipient.email }}</div>{% endif %}
+                                        {% else %}
+                                            {{ recipient.displayAddress }}
+                                        {% endif %}
+                                    </th>
+                                    <td data-title="{{ 'Source'|t('mailer') }}">
+                                        {{ {custom: 'Custom'|t('mailer'), group: 'User group'|t('mailer'), admins: 'Admins'|t('mailer'), user: 'User'|t('mailer')}[recipient.source] ?? recipient.source }}
+                                    </td>
+                                    <td data-title="{{ 'Status'|t('mailer') }}">
+                                        <span class="mailer-status">
+                                            <pk-status status="{{ {sent: 'green', failed: 'red', skipped: 'disabled', sending: 'blue', pending: 'pending'}[recipient.status] ?? 'disabled' }}" aria-hidden="true"></pk-status>
+                                            <span>{{ statuses[recipient.status] ?? recipient.status|capitalize }}</span>
+                                        </span>
+                                    </td>
+                                    <td data-title="{{ 'Details'|t('mailer') }}" class="{{ recipient.status == 'failed' ? 'error' : 'light' }}">{{ recipient.error ?? '' }}</td>
+                                    <td data-title="{{ 'Sent'|t('mailer') }}">{{ recipient.dateSent ? recipient.dateSent|datetime('short') : '–' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% include 'mailer/_components/pagination' with {params: status is not null ? {status: status} : {}} %}
+            {% else %}
+                <p class="zilch small">{{ 'No recipients.'|t('mailer') }}</p>
+            {% endif %}
+        </pk-tab-panel>
+    </pk-tabs>
+{% endblock %}
+
+{% block details %}
+    <div class="meta read-only">
+        <div class="data">
+            <h5 class="heading">{{ 'Status'|t('mailer') }}</h5>
+            <div class="value">{% include 'mailer/_components/status' %}</div>
+        </div>
+        <div class="data">
+            <h5 class="heading">{{ 'Recipients'|t('mailer') }}</h5>
+            <div class="value">{{ send.totalRecipients|number }}</div>
+        </div>
+        <div class="data">
+            <h5 class="heading">{{ 'Sent'|t('mailer') }}</h5>
+            <div class="value">{{ send.sentCount|number }}</div>
+        </div>
+        <div class="data">
+            <h5 class="heading">{{ 'Failed'|t('mailer') }}</h5>
+            <div class="value">{{ send.failedCount|number }}</div>
+        </div>
+        <div class="data">
+            <h5 class="heading">{{ 'Skipped'|t('mailer') }}</h5>
+            <div class="value">{{ send.skippedCount|number }}</div>
+        </div>
+        {% if send.isActive %}
+            <div class="data">
+                <h5 class="heading">{{ 'Pending'|t('mailer') }}</h5>
+                <div class="value">{{ send.pendingCount|number }}</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="meta read-only">
+        <div class="data">
+            <h5 class="heading">{{ 'Sender'|t('mailer') }}</h5>
+            <div class="value">{{ sender ? sender.friendlyName : '–' }}</div>
+        </div>
+        <div class="data">
+            <h5 class="heading">{{ 'From'|t('mailer') }}</h5>
+            <div class="value">{{ send.fromName ? send.fromName ~ ' <' ~ send.fromEmail ~ '>' : send.fromEmail }}</div>
+        </div>
+        {% if send.replyTo %}
+            <div class="data">
+                <h5 class="heading">{{ 'Reply-To'|t('mailer') }}</h5>
+                <div class="value">{{ send.replyTo }}</div>
+            </div>
+        {% endif %}
+        {% if send.description %}
+            <div class="data">
+                <h5 class="heading">{{ 'Sent to'|t('mailer') }}</h5>
+                <div class="value">{{ send.description }}</div>
+            </div>
+        {% endif %}
+        {% if send.attachments|length %}
+            <div class="data">
+                <h5 class="heading">{{ 'Attachments'|t('mailer') }}</h5>
+                <div class="value">
+                    {% for attachment in send.attachments %}
+                        <div>{{ attachment.filename }} <span class="light">({{ attachment.size|filesize }})</span></div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="meta read-only">
+        <div class="data">
+            <h5 class="heading">{{ 'Created'|t('mailer') }}</h5>
+            <div class="value">{{ send.dateCreated ? send.dateCreated|datetime('short') : '–' }}</div>
+        </div>
+        <div class="data">
+            <h5 class="heading">{{ 'Started'|t('mailer') }}</h5>
+            <div class="value">{{ send.dateStarted ? send.dateStarted|datetime('short') : '–' }}</div>
+        </div>
+        <div class="data">
+            <h5 class="heading">{{ 'Finished'|t('mailer') }}</h5>
+            <div class="value">{{ send.dateFinished ? send.dateFinished|datetime('short') : '–' }}</div>
+        </div>
+        {% set snapshot = send.settingsSnapshot %}
+        <div class="data">
+            <h5 class="heading">{{ 'Batches'|t('mailer') }}</h5>
+            <div class="value">
+                {% if snapshot.batchMode ?? false %}
+                    {{ '{mails} emails every {seconds} seconds'|t('mailer', {mails: snapshot.batchMails|number, seconds: snapshot.batchTime|number}) }}
+                {% else %}
+                    {{ 'Off'|t('mailer') }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="data">
+            <h5 class="heading">{{ 'Safe mode'|t('mailer') }}</h5>
+            <div class="value">{{ (snapshot.safeMode ?? true) ? 'On'|t('mailer') : 'Off'|t('mailer') }}</div>
+        </div>
+        {% if snapshot.testToEmailAddress ?? false %}
+            <div class="data">
+                <h5 class="heading">{{ 'Test mode'|t('mailer') }}</h5>
+                <div class="value">{{ snapshot.testToEmailAddress is iterable ? snapshot.testToEmailAddress|keys|join(', ') : snapshot.testToEmailAddress }}</div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

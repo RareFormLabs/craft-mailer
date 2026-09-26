@@ -1,0 +1,20 @@
+<pk-dialog class="mailer-preview-dialog" size="wide" label="{{ 'Preview'|t('mailer') }}" data-mailer-preview-dialog>
+    <p class="light mailer-preview-dialog__intro">{{ 'Rendered with your own user details.'|t('mailer') }}</p>
+    <dl class="mailer-preview-dialog__subject">
+        <dt>{{ 'Subject'|t('mailer') }}</dt>
+        <dd data-mailer-preview-subject></dd>
+    </dl>
+    <pk-tabs value="html" class="mailer-preview-tabs">
+        <pk-tab slot="nav" value="html">{{ 'HTML'|t('mailer') }}</pk-tab>
+        <pk-tab slot="nav" value="text">{{ 'Plain text'|t('mailer') }}</pk-tab>
+        <pk-tab-panel value="html">
+            <iframe class="mailer-preview-frame" sandbox="" title="{{ 'Email preview'|t('mailer') }}" data-mailer-preview-html></iframe>
+        </pk-tab-panel>
+        <pk-tab-panel value="text">
+            <pre class="mailer-preview-text" data-mailer-preview-text></pre>
+        </pk-tab-panel>
+    </pk-tabs>
+    <div slot="footer">
+        <pk-button data-mailer-dialog-close>{{ 'Close'|t('app') }}</pk-button>
+    </div>
+</pk-dialog>

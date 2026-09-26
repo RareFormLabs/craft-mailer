@@ -1,0 +1,70 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Compose'|t('mailer') %}
+{% set docTitle = title ~ ' – ' ~ settings.name|t('mailer') %}
+{% set selectedSubnavItem = 'compose' %}
+{% set fullPageForm = true %}
+{% set saveShortcut = false %}
+{% set mainFormAttributes = {
+    enctype: 'multipart/form-data',
+    data: {
+        'mailer-compose': true,
+        'confirm-unload': false,
+    },
+} %}
+
+{% block actionButton %}
+    <button type="submit" class="btn submit" data-mailer-send>{{ 'Send…'|t('mailer') }}</button>
+{% endblock %}
+
+{% block content %}
+    {{ actionInput('mailer/compose/send') }}
+    {{ hiddenInput('confirmed', '0', {'data-mailer-confirmed': true}) }}
+
+    {% if templateNotice %}
+        <p class="notice has-icon">
+            <span class="icon" aria-hidden="true"></span>
+            <span>{{ templateNotice }}</span>
+        </p>
+    {% endif %}
+
+    {% if form.getErrors('recipients') %}
+        <ul class="errors mailer-form-errors">
+            {% for error in form.getErrors('recipients') %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% set recipientErrors = form.hasErrors('customTo') or form.hasErrors('customCc') or form.hasErrors('customBcc') or form.hasErrors('groupIds') or form.hasErrors('userIds') or form.hasErrors('recipients') %}
+
+    <pk-tabs value="{{ recipientErrors and not form.hasErrors('subject') and not form.hasErrors('bodyJson') ? 'recipients' : 'message' }}" class="mailer-tabs" data-mailer-tabs>
+        <pk-tab slot="nav" value="message">
+            {{ 'Message'|t('mailer') }}
+            {% if form.hasErrors('subject') or form.hasErrors('bodyJson') %}
+                <span slot="status" class="mailer-tab-error" aria-label="{{ 'Error'|t('app') }}">!</span>
+            {% endif %}
+        </pk-tab>
+        <pk-tab slot="nav" value="recipients">
+            {{ 'Recipients'|t('mailer') }}
+            <span slot="status" class="mailer-count-badge" data-mailer-count-badge hidden></span>
+            {% if recipientErrors %}
+                <span slot="status" class="mailer-tab-error" aria-label="{{ 'Error'|t('app') }}">!</span>
+            {% endif %}
+        </pk-tab>
+
+        <pk-tab-panel value="message">
+            {% include 'mailer/compose/_message' %}
+        </pk-tab-panel>
+        <pk-tab-panel value="recipients">
+            {% include 'mailer/compose/_recipients' %}
+        </pk-tab-panel>
+    </pk-tabs>
+
+    {% include 'mailer/_components/preview-dialog' %}
+    {% include 'mailer/_components/confirm-dialog' %}
+{% endblock %}
+
+{% block details %}
+    {% include 'mailer/compose/_details' %}
+{% endblock %}
