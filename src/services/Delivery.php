@@ -89,7 +89,7 @@ class Delivery extends Component
 
         $variables = $renderer->getContext($recipientUser, $recipient);
         $content = $form->getBodyContent();
-        $htmlTemplate = $renderer->contentToHtml($content);
+        $htmlTemplate = Plugin::getInstance()->getImages()->prepareForDisplay($renderer->contentToHtml($content));
         $textTemplate = $renderer->contentToText($content);
         $html = $renderer->personalize($htmlTemplate, $variables, true);
 
@@ -129,15 +129,20 @@ class Delivery extends Component
         try {
             $variables = $renderer->getContext($user, $recipient);
             $content = $form->getBodyContent();
+            $attachments = $attachmentsService->store($form, $key);
+            $html = $plugin->getImages()->prepareForEmail(
+                $renderer->contentToHtml($content),
+                $form->embedImages ? Attachments::cidsByAssetId($attachments) : null,
+            );
             $message = $this->buildMessage(
                 $form->fromEmail,
                 $form->fromName,
                 $form->replyTo ?: null,
                 ['to' => [(string)$user->email => $user->getFullName() ?: null]],
                 Craft::t('mailer', '[Test]') . ' ' . $renderer->personalize($form->subject, $variables, false),
-                $renderer->personalize($renderer->contentToHtml($content), $variables, true),
+                $renderer->personalize($html, $variables, true),
                 $renderer->personalize($renderer->contentToText($content), $variables, false),
-                $attachmentsService->store($form, $key),
+                $attachments,
             );
 
             return $this->deliver($message, $recipient, null, $variables);

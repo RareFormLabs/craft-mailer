@@ -62,7 +62,7 @@ class ComposeController extends Controller
             }
         }
 
-        $form ??= new ComposeForm();
+        $form ??= new ComposeForm(['embedImages' => $plugin->getSettings()->embedImages]);
 
         if (!$this->canChangeSender() || ($form->fromEmail === '' && $form->fromName === '')) {
             [$form->fromEmail, $form->fromName] = $this->defaultSender();
@@ -196,6 +196,7 @@ class ComposeController extends Controller
         $form = $this->buildForm();
         $form->validate(['subject', 'bodyJson', 'fromName', 'fromEmail', 'replyTo']);
         $plugin->getRenderer()->validateForm($form, $user);
+        $plugin->getImages()->validate($form);
         $plugin->getAttachments()->validate($form);
 
         if ($form->hasErrors()) {
@@ -218,6 +219,24 @@ class ComposeController extends Controller
     }
 
     /**
+     * Returns the details needed to insert an image asset into the message.
+     */
+    public function actionImage(): Response
+    {
+        $this->requirePostRequest();
+        $this->requireAcceptsJson();
+
+        $assetId = (int)$this->request->getRequiredBodyParam('assetId');
+        $asset = Asset::find()->id($assetId)->status(null)->one();
+
+        if (!$asset || $asset->kind !== Asset::KIND_IMAGE) {
+            return $this->asFailure(Craft::t('mailer', 'That asset isn’t an image.'));
+        }
+
+        return $this->asJson(Plugin::getInstance()->getImages()->getEditorData($asset));
+    }
+
+    /**
      * Builds the compose form from the request, enforcing the sender if the user can’t change it.
      */
     private function buildForm(): ComposeForm
@@ -236,6 +255,7 @@ class ComposeController extends Controller
         $plugin = Plugin::getInstance();
         $form->validate();
         $plugin->getRenderer()->validateForm($form, $this->user());
+        $plugin->getImages()->validate($form);
         $plugin->getAttachments()->validate($form);
 
         return !$form->hasErrors();

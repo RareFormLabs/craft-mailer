@@ -14,7 +14,7 @@
         <pk-tab slot="nav" value="html">{{ 'HTML'|t('mailer') }}</pk-tab>
         <pk-tab slot="nav" value="text">{{ 'Plain text'|t('mailer') }}</pk-tab>
         <pk-tab-panel value="html">
-            <iframe class="mailer-preview-frame" sandbox="" title="{{ 'Email preview'|t('mailer') }}" data-mailer-preview-html></iframe>
+            <iframe class="mailer-preview-frame" sandbox="allow-same-origin" title="{{ 'Email preview'|t('mailer') }}" data-mailer-preview-html></iframe>
         </pk-tab-panel>
         <pk-tab-panel value="text">
             <pre class="mailer-preview-text" data-mailer-preview-text></pre>

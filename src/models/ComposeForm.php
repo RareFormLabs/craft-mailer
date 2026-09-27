@@ -40,6 +40,11 @@ class ComposeForm extends Model
 
     public string $replyTo = '';
 
+    /**
+     * @var bool Whether images in the body are embedded in each email instead of linked.
+     */
+    public bool $embedImages = false;
+
     public bool $sendToCustom = false;
 
     public string $customTo = '';
@@ -91,6 +96,7 @@ class ComposeForm extends Model
             'fromName' => trim((string)$request->getBodyParam('fromName', '')),
             'fromEmail' => trim((string)$request->getBodyParam('fromEmail', '')),
             'replyTo' => trim((string)$request->getBodyParam('replyTo', '')),
+            'embedImages' => (bool)$request->getBodyParam('embedImages', false),
             'sendToCustom' => !empty($modes['custom']),
             'customTo' => (string)$request->getBodyParam('customTo', ''),
             'customCc' => (string)$request->getBodyParam('customCc', ''),
@@ -123,6 +129,7 @@ class ComposeForm extends Model
             'fromName' => (string)$send->fromName,
             'fromEmail' => $send->fromEmail,
             'replyTo' => (string)$send->replyTo,
+            'embedImages' => (bool)($send->settingsSnapshot['embedImages'] ?? false),
             'sendToCustom' => !empty($config['custom']['enabled']),
             'customTo' => implode(', ', array_map([AddressParser::class, 'format'], $config['custom']['to'] ?? [])),
             'customCc' => implode(', ', array_map([AddressParser::class, 'format'], $config['custom']['cc'] ?? [])),
@@ -133,7 +140,7 @@ class ComposeForm extends Model
             'userIds' => $config['users']['ids'] ?? [],
             'assetIds' => array_values(array_filter(array_map(
                 fn(array $attachment) => $attachment['assetId'] ?? null,
-                $send->attachments,
+                array_filter($send->attachments, fn(array $attachment) => ($attachment['source'] ?? null) === 'asset'),
             ))),
         ]);
     }

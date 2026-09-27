@@ -67,7 +67,7 @@ class Sends extends Component
             'replyTo' => $form->replyTo ?: null,
             'subject' => $form->subject,
             'bodyJson' => Json::encode($content),
-            'bodyHtml' => $renderer->contentToHtml($content),
+            'bodyHtml' => null,
             'bodyText' => $renderer->contentToText($content),
             'recipientsConfig' => $form->getRecipientsConfig(),
             'settingsSnapshot' => [
@@ -76,6 +76,7 @@ class Sends extends Component
                 'batchMails' => $settings->batchMails,
                 'batchTime' => $settings->batchTime,
                 'useEmailTemplate' => $settings->useEmailTemplate,
+                'embedImages' => $form->embedImages,
                 'testToEmailAddress' => Craft::$app->getConfig()->getGeneral()->getTestToEmailAddress() ?: null,
             ],
             'totalRecipients' => $summary['total'],
@@ -90,6 +91,10 @@ class Sends extends Component
         }
 
         $send->attachments = $plugin->getAttachments()->store($form, $uid);
+        $send->bodyHtml = $plugin->getImages()->prepareForEmail(
+            $renderer->contentToHtml($content),
+            $form->embedImages ? Attachments::cidsByAssetId($send->attachments) : null,
+        );
         $db = Craft::$app->getDb();
         $transaction = $db->beginTransaction();
 

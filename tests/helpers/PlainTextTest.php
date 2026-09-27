@@ -34,6 +34,16 @@ class PlainTextTest extends TestCase
         );
     }
 
+    public function testDescribesImages(): void
+    {
+        $content = [
+            ['type' => 'image', 'attrs' => ['src' => 'https://example.com/a.png', 'alt' => 'Team photo']],
+            ['type' => 'image', 'attrs' => ['src' => 'https://example.com/b.png']],
+        ];
+
+        $this->assertSame("[Image: Team photo]\n\n[Image]", PlainText::fromContent($content));
+    }
+
     public function testReturnsEmptyStringForEmptyContent(): void
     {
         $this->assertSame('', PlainText::fromContent([]));

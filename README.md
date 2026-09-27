@@ -14,7 +14,7 @@ Mailer is a modern take on the classic [Craft Mailer](https://github.com/victor-
   - **Users:** one email to each selected user.
 
   Each person only gets one email, even if they’re selected more than once. Suspended, pending and inactive users are skipped, and the reason is logged.
-- **Rich text editor** for the message, with headings, lists, links and more.
+- **Rich text editor** for the message, with headings, lists, links, and images from your assets placed anywhere in the body.
 - **Personalization** with variables like `{{ user.firstName }}`, inserted from a menu.
 - **Preview** as the first selected recipient (with a warning for any variables that would be empty), and **test sends** to yourself.
 - **Your email template:** messages are wrapped in the site’s HTML email template (Settings → Email), with an automatic plain-text version.
@@ -62,6 +62,17 @@ For custom recipients, Mailer looks up the first To address. If it belongs to a 
 > [!NOTE]
 > Variables can’t be used inside link URLs.
 
+### Images
+
+Use the image button in the editor toolbar to place an image from your assets anywhere in the message. Drag the corners to resize it. Images are limited to 600px wide unless you resize them.
+
+There are two ways images can be sent, chosen with **Embed images** in the sidebar:
+
+- **Linked** (default): the email links to the image’s public URL, and email clients download it when the email is opened. Emails stay small, but the image must be in a volume with public URLs, and some clients hide images until the reader allows them.
+- **Embedded:** the image is sent inside each email, so it shows without being downloaded, and it works for volumes without public URLs. Every email is larger, and embedded images count toward the attachment size limit.
+
+Mailer won’t send a linked image that isn’t publicly accessible. Choose a public image or turn on embedding. Use the **Embed Images** setting to turn embedding on by default.
+
 ### Safe mode
 
 Safe mode is on by default. In safe mode, messages can only use the variables listed above. Anything else that looks like Twig is rejected before sending.
@@ -90,7 +101,10 @@ return [
     // Wrap messages in the system HTML email template
     'useEmailTemplate' => true,
 
-    // Maximum combined attachment size, in bytes (0 = no limit)
+    // Turn on “Embed images” by default when composing
+    'embedImages' => false,
+
+    // Maximum combined size of attachments and embedded images, in bytes (0 = no limit)
     'maxAttachmentSize' => 10485760,
 
     // Where attachments are stored while a send is in progress.

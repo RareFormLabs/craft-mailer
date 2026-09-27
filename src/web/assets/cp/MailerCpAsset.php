@@ -42,6 +42,8 @@ class MailerCpAsset extends AssetBundle
                 'Are you sure you want to delete this log?',
                 'Cancel',
                 'Couldn’t count recipients.',
+                'Couldn’t insert the image.',
+                'Insert image',
                 'Counting…',
                 'Export failed.',
                 'Nothing to export.',

@@ -70,7 +70,7 @@
                 <dt>{{ 'Subject'|t('mailer') }}</dt>
                 <dd>{{ send.subject }}</dd>
             </dl>
-            <iframe class="mailer-preview-frame" sandbox="" title="{{ 'Message'|t('mailer') }}" srcdoc="{{ previewHtml }}"></iframe>
+            <iframe class="mailer-preview-frame" sandbox="allow-same-origin" title="{{ 'Message'|t('mailer') }}" srcdoc="{{ previewHtml }}"></iframe>
             <details class="mailer-variables">
                 <summary>{{ 'Plain text'|t('mailer') }}</summary>
                 <pre class="mailer-preview-text">{{ send.bodyText }}</pre>
@@ -185,9 +185,12 @@
         {% if send.attachments|length %}
             <div class="data">
                 <h5 class="heading">{{ 'Attachments'|t('mailer') }}</h5>
-                <div class="value">
+                <div class="value mailer-attachment-list">
                     {% for attachment in send.attachments %}
-                        <div>{{ attachment.filename }} <span class="light">({{ attachment.size|filesize }})</span></div>
+                        <div>
+                            {{ attachment.filename }}
+                            <span class="light">({{ attachment.size|filesize }}{{ (attachment.source ?? '') == 'inline' ? ', ' ~ 'embedded'|t('mailer') }})</span>
+                        </div>
                     {% endfor %}
                 </div>
             </div>

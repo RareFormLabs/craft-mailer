@@ -4,6 +4,10 @@ export default defineConfig({
     // Craft republishes dist/ under a hashed cpresources folder, so keep URLs relative.
     base: './',
     publicDir: false,
+    resolve: {
+        // One copy of TipTap and Plugin Kit, so the registered image extension is shared with the editor.
+        dedupe: ['@tiptap/core', '@tiptap/pm', '@verbb/plugin-kit-tiptap-core', 'lit'],
+    },
     build: {
         outDir: 'src/web/assets/cp/dist',
         emptyOutDir: true,

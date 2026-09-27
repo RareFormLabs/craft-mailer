@@ -47,6 +47,12 @@ class Settings extends Model
     public bool $useEmailTemplate = true;
 
     /**
+     * @var bool Whether “Embed images” is turned on by default when composing. Embedded images are sent inside
+     * each email rather than linked to their public URL.
+     */
+    public bool $embedImages = false;
+
+    /**
      * @var int The maximum combined size of all attachments, in bytes. `0` disables the limit.
      */
     public int $maxAttachmentSize = 10485760;
@@ -74,6 +80,7 @@ class Settings extends Model
             'batchMails' => Craft::t('mailer', 'Emails per Batch'),
             'batchTime' => Craft::t('mailer', 'Wait Between Batches'),
             'useEmailTemplate' => Craft::t('mailer', 'Use Email Template'),
+            'embedImages' => Craft::t('mailer', 'Embed Images'),
             'maxAttachmentSize' => Craft::t('mailer', 'Max Attachment Size'),
         ];
     }
@@ -87,7 +94,7 @@ class Settings extends Model
             [['name'], 'trim'],
             [['name'], 'required'],
             [['name'], 'string', 'max' => 50],
-            [['safeMode', 'batchMode', 'useEmailTemplate'], 'boolean'],
+            [['safeMode', 'batchMode', 'useEmailTemplate', 'embedImages'], 'boolean'],
             [['batchMails'], 'integer', 'min' => 1, 'max' => 10000],
             [['batchTime'], 'integer', 'min' => 1, 'max' => 86400],
             [['maxAttachmentSize'], 'integer', 'min' => 0],

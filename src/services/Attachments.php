@@ -65,8 +65,10 @@ class Attachments extends Component
             }
         }
 
+        $total += Plugin::getInstance()->getImages()->getEmbeddedSize($form);
+
         if ($maxSize > 0 && $total > $maxSize) {
-            $form->addError('uploads', Craft::t('mailer', 'Attachments can’t be larger than {size} combined.', [
+            $form->addError('uploads', Craft::t('mailer', 'Attachments and embedded images can’t be larger than {size} combined.', [
                 'size' => Craft::$app->getFormatter()->asShortSize($maxSize),
             ]));
         }
@@ -77,7 +79,9 @@ class Attachments extends Component
     /**
      * Stores a form’s attachments under the given key.
      *
-     * @return array<int, array{source: string, assetId?: int, filename: string, path: string, mimeType: string|null, size: int}>
+     * Embedded images are included with the `inline` source and a `cid` (content ID).
+     *
+     * @return array<int, array{source: string, assetId?: int, cid?: string, filename: string, path: string, mimeType: string|null, size: int}>
      * @throws Exception
      */
     public function store(ComposeForm $form, string $key): array
@@ -129,6 +133,10 @@ class Attachments extends Component
                     ];
                 }
             }
+
+            if ($form->embedImages) {
+                array_push($attachments, ...$this->storeImages($form, $dir));
+            }
         } catch (Throwable $e) {
             $this->delete($key);
             throw $e instanceof Exception ? $e : new Exception($e->getMessage(), 0, $e);
@@ -155,11 +163,86 @@ class Attachments extends Component
                 ]));
             }
 
+            if (($attachment['source'] ?? null) === 'inline') {
+                $message->embed($attachment['path'], array_filter([
+                    'fileName' => $attachment['cid'],
+                    'contentType' => $attachment['mimeType'] ?? null,
+                ]));
+                continue;
+            }
+
             $message->attach($attachment['path'], array_filter([
                 'fileName' => $attachment['filename'],
                 'contentType' => $attachment['mimeType'] ?? null,
             ]));
         }
+    }
+
+    /**
+     * Returns the content IDs of stored inline images, indexed by asset ID.
+     *
+     * @return array<int, string>
+     */
+    public static function cidsByAssetId(array $attachments): array
+    {
+        $cids = [];
+
+        foreach ($attachments as $attachment) {
+            if (($attachment['source'] ?? null) === 'inline' && isset($attachment['assetId'], $attachment['cid'])) {
+                $cids[(int)$attachment['assetId']] = $attachment['cid'];
+            }
+        }
+
+        return $cids;
+    }
+
+    /**
+     * Copies the images used in a form’s body into `{dir}/inline/`, for embedding.
+     *
+     * @return array<int, array{source: string, assetId: int, cid: string, filename: string, path: string, mimeType: string|null, size: int}>
+     */
+    private function storeImages(ComposeForm $form, string $dir): array
+    {
+        $images = Plugin::getInstance()->getImages();
+        $assetIds = $images->getAssetIds($form->getBodyContent());
+
+        if (!$assetIds) {
+            return [];
+        }
+
+        $inlineDir = $dir . DIRECTORY_SEPARATOR . 'inline';
+        FileHelper::createDirectory($inlineDir);
+        $stored = [];
+
+        foreach ($assetIds as $assetId) {
+            $asset = $images->getAsset($assetId);
+
+            if (!$asset) {
+                continue;
+            }
+
+            $filename = AssetsHelper::prepareAssetName($asset->getFilename()) ?: 'image';
+            $cid = sprintf('image-%d-%s', $asset->id, $filename);
+            $path = $inlineDir . DIRECTORY_SEPARATOR . $cid;
+            $tempPath = $asset->getCopyOfFile();
+
+            if (!@rename($tempPath, $path)) {
+                copy($tempPath, $path);
+                @unlink($tempPath);
+            }
+
+            $stored[] = [
+                'source' => 'inline',
+                'assetId' => (int)$asset->id,
+                'cid' => $cid,
+                'filename' => $filename,
+                'path' => $path,
+                'mimeType' => $asset->getMimeType(),
+                'size' => (int)filesize($path),
+            ];
+        }
+
+        return $stored;
     }
 
     /**

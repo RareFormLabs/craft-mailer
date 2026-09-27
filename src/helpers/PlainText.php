@@ -138,6 +138,10 @@ class PlainText
                 case 'hardBreak':
                     $text .= "\n";
                     break;
+                case 'image':
+                    $alt = trim((string)($node['attrs']['alt'] ?? ''));
+                    $text .= $alt !== '' ? "[Image: $alt]" : '[Image]';
+                    break;
                 case 'variableTag':
                     $text .= '{' . ($node['attrs']['value'] ?? '') . '}';
                     break;

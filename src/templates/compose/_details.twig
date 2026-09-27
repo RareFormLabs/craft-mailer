@@ -34,9 +34,17 @@
         }) }}
 
         <pk-field
+            label="{{ 'Embed images'|t('mailer') }}"
+            instructions="{{ 'Send images inside each email instead of linking to them. Images show without being downloaded, but emails are larger.'|t('mailer') }}"
+        >
+            {{ hiddenInput('embedImages', '') }}
+            <pk-lightswitch name="embedImages" value="1" {{ form.embedImages ? 'checked' }}></pk-lightswitch>
+        </pk-field>
+
+        <pk-field
             label="{{ 'Upload files'|t('mailer') }}"
             for="mailer-uploads"
-            instructions="{{ settings.maxAttachmentSize ? 'Up to {size} in total, including assets.'|t('mailer', {size: settings.maxAttachmentSize|filesize}) : '' }}"
+            instructions="{{ settings.maxAttachmentSize ? 'Up to {size} in total, including assets and embedded images.'|t('mailer', {size: settings.maxAttachmentSize|filesize}) : '' }}"
         >
             <input type="file" id="mailer-uploads" name="uploads[]" multiple class="mailer-file-input" data-mailer-uploads>
             {% include 'mailer/_components/errors' with {errors: form.getErrors('uploads')} only %}

@@ -1,3 +1,5 @@
+// Editor extensions must be registered before the components render.
+import './images';
 import { components } from './components';
 import { initCompose } from './compose';
 import { initConfirmForms, initDialogCloseButtons } from './dialogs';

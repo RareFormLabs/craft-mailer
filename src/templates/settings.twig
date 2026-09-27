@@ -37,6 +37,15 @@
         <pk-lightswitch name="useEmailTemplate" value="1" {{ settings.useEmailTemplate ? 'checked' }} {{ 'useEmailTemplate' in overrides ? 'disabled' }}></pk-lightswitch>
     </pk-field>
 
+    <pk-field
+        label="{{ 'Embed Images'|t('mailer') }}"
+        instructions="{{ 'Turn on “Embed images” by default when composing. Embedded images are sent inside each email instead of being linked to their public URL.'|t('mailer') }}"
+        warning="{{ overrideWarning('embedImages', overrides) }}"
+    >
+        {% if 'embedImages' not in overrides %}{{ hiddenInput('embedImages', '') }}{% endif %}
+        <pk-lightswitch name="embedImages" value="1" {{ settings.embedImages ? 'checked' }} {{ 'embedImages' in overrides ? 'disabled' }}></pk-lightswitch>
+    </pk-field>
+
     <hr>
 
     <pk-field

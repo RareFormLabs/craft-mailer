@@ -15,6 +15,7 @@ use craft\web\UrlManager;
 use rareform\mailer\models\Settings;
 use rareform\mailer\services\Attachments;
 use rareform\mailer\services\Delivery;
+use rareform\mailer\services\Images;
 use rareform\mailer\services\Recipients;
 use rareform\mailer\services\Renderer;
 use rareform\mailer\services\Sends;
@@ -26,6 +27,7 @@ use yii\base\Event;
  *
  * @property-read Attachments $attachments
  * @property-read Delivery $delivery
+ * @property-read Images $images
  * @property-read Recipients $recipients
  * @property-read Renderer $renderer
  * @property-read Sends $sends
@@ -63,6 +65,7 @@ class Plugin extends \craft\base\Plugin
             'components' => [
                 'attachments' => Attachments::class,
                 'delivery' => Delivery::class,
+                'images' => Images::class,
                 'recipients' => Recipients::class,
                 'renderer' => Renderer::class,
                 'sends' => Sends::class,
@@ -98,6 +101,11 @@ class Plugin extends \craft\base\Plugin
     public function getDelivery(): Delivery
     {
         return $this->get('delivery');
+    }
+
+    public function getImages(): Images
+    {
+        return $this->get('images');
     }
 
     public function getRecipients(): Recipients

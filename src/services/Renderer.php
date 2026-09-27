@@ -19,6 +19,7 @@ use rareform\mailer\helpers\SandboxTwig;
 use rareform\mailer\models\ComposeForm;
 use rareform\mailer\models\RecipientData;
 use rareform\mailer\Plugin;
+use rareform\mailer\tiptap\Image;
 use Throwable;
 use verbb\tiptap\EditorFactory;
 use verbb\tiptap\Normalizer;
@@ -122,7 +123,7 @@ class Renderer extends Component
      */
     public function contentToHtml(array $content): string
     {
-        return Normalizer::stripInvisibleChars(EditorFactory::contentToHtml($content));
+        return Normalizer::stripInvisibleChars(EditorFactory::contentToHtml($content, [new Image()]));
     }
 
     /**

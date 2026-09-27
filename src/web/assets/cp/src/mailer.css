@@ -241,3 +241,8 @@
 pk-dialog [hidden] {
     display: none !important;
 }
+
+.mailer-attachment-list {
+    flex-direction: column;
+    align-items: flex-start;
+}

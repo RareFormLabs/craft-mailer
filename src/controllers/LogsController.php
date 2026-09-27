@@ -9,6 +9,7 @@ use Craft;
 use craft\web\Controller;
 use rareform\mailer\models\RecipientData;
 use rareform\mailer\Plugin;
+use rareform\mailer\services\Attachments;
 use rareform\mailer\web\assets\cp\MailerCpAsset;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -79,7 +80,10 @@ class LogsController extends Controller
 
         return $this->renderTemplate('mailer/logs/view', [
             'send' => $send,
-            'previewHtml' => Plugin::getInstance()->getRenderer()->wrap((string)$send->bodyHtml, [
+            'previewHtml' => Plugin::getInstance()->getRenderer()->wrap(Plugin::getInstance()->getImages()->prepareForDisplay(
+                (string)$send->bodyHtml,
+                array_flip(Attachments::cidsByAssetId($send->attachments)),
+            ), [
                 'fromEmail' => $send->fromEmail,
                 'fromName' => $send->fromName,
                 'replyToEmail' => $send->replyTo,
