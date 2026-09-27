@@ -1,12 +1,14 @@
 import { components } from './components';
 import { initCompose } from './compose';
 import { initConfirmForms, initDialogCloseButtons } from './dialogs';
+import { initCheckedFormValueFix } from './form-fixes';
 import './mailer.css';
 
 // Referenced so bundlers keep every component definition.
 void components;
 
 function init(): void {
+    initCheckedFormValueFix();
     initDialogCloseButtons();
     initConfirmForms();
 

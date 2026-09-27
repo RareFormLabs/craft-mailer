@@ -53,7 +53,10 @@ class SafeTemplate
     }
 
     /**
-     * Returns snippets of any Twig syntax left over once the allowed tokens are removed.
+     * Returns any Twig syntax left over once the allowed tokens are removed.
+     *
+     * Complete expressions (`{{ … }}`, `{% … %}`, `{# … #}`) are returned whole, with HTML tags removed. Stray
+     * delimiters are returned with a little surrounding context.
      *
      * @param string $template
      * @param string[] $tokens
@@ -63,28 +66,42 @@ class SafeTemplate
     public static function leftovers(string $template, array $tokens, int $limit = 5): array
     {
         $stripped = preg_replace(self::pattern($tokens), ' ', $template) ?? $template;
-
-        if (!preg_match_all('/\{\{|\}\}|\{%|%\}|\{#|#\}/', $stripped, $matches, PREG_OFFSET_CAPTURE)) {
-            return [];
-        }
-
         $snippets = [];
 
-        foreach ($matches[0] as [, $offset]) {
-            $start = max(0, $offset - 20);
-            $snippet = substr($stripped, $start, 50);
-            $snippet = trim(preg_replace('/\s+/u', ' ', strip_tags(html_entity_decode($snippet, ENT_QUOTES | ENT_HTML5, 'UTF-8'))) ?? '');
-            $snippet = mb_scrub($snippet, 'UTF-8');
+        $add = function(string $snippet) use (&$snippets): void {
+            $snippet = html_entity_decode(strip_tags($snippet), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $snippet = trim(mb_scrub(preg_replace('/\s+/u', ' ', $snippet) ?? $snippet, 'UTF-8'));
 
             if ($snippet !== '' && !in_array($snippet, $snippets, true)) {
                 $snippets[] = $snippet;
             }
+        };
 
-            if (count($snippets) >= $limit) {
-                break;
+        // Whole expressions first
+        $remaining = preg_replace_callback('/\{\{.*?\}\}|\{%.*?%\}|\{#.*?#\}/su', function(array $match) use ($add) {
+            $add($match[0]);
+
+            return ' ';
+        }, $stripped) ?? $stripped;
+
+        // Then any stray delimiters
+        if (preg_match_all('/\{\{|\}\}|\{%|%\}|\{#|#\}/', $remaining, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as [$delimiter, $offset]) {
+                $add(substr($remaining, max(0, $offset - 20), 20 + strlen($delimiter) + 20));
             }
         }
 
-        return $snippets ?: ['{{'];
+        return array_slice($snippets, 0, $limit);
+    }
+
+    /**
+     * Returns whether a leftover snippet is actually an allowed token that was broken up by formatting
+     * (e.g. `{{ user.<strong>firstName</strong> }}`).
+     *
+     * @param string[] $tokens
+     */
+    public static function isFormattedToken(string $snippet, array $tokens): bool
+    {
+        return (bool)preg_match(self::pattern($tokens), $snippet);
     }
 }

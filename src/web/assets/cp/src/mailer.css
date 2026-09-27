@@ -235,3 +235,9 @@
 .mailer-recipients-table td.error {
     color: var(--error-color, #cf1124);
 }
+
+/* Craft’s .warning/.notice styles set a display value that would override the hidden attribute. */
+[data-mailer-compose] [hidden],
+pk-dialog [hidden] {
+    display: none !important;
+}

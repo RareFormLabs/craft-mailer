@@ -79,6 +79,11 @@ class LogsController extends Controller
 
         return $this->renderTemplate('mailer/logs/view', [
             'send' => $send,
+            'previewHtml' => Plugin::getInstance()->getRenderer()->wrap((string)$send->bodyHtml, [
+                'fromEmail' => $send->fromEmail,
+                'fromName' => $send->fromName,
+                'replyToEmail' => $send->replyTo,
+            ]),
             'sender' => $send->getSender(),
             'recipients' => array_map([RecipientData::class, 'fromRow'], $rows),
             'status' => $status,

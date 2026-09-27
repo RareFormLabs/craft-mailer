@@ -3,7 +3,7 @@
 {% set title = send.subject %}
 {% set selectedSubnavItem = 'logs' %}
 {% set crumbs = [
-    {label: craft.app.plugins.getPlugin('mailer').settings.name|t('mailer'), url: cpUrl('mailer/logs')},
+    {label: craft.app.plugins.getPlugin('mailer').settings.name|t('mailer'), url: cpUrl('mailer')},
     {label: 'Logs'|t('mailer'), url: cpUrl('mailer/logs')},
 ] %}
 {% set statuses = {
@@ -70,7 +70,7 @@
                 <dt>{{ 'Subject'|t('mailer') }}</dt>
                 <dd>{{ send.subject }}</dd>
             </dl>
-            <iframe class="mailer-preview-frame" sandbox="" title="{{ 'Message'|t('mailer') }}" srcdoc="{{ send.bodyHtml }}"></iframe>
+            <iframe class="mailer-preview-frame" sandbox="" title="{{ 'Message'|t('mailer') }}" srcdoc="{{ previewHtml }}"></iframe>
             <details class="mailer-variables">
                 <summary>{{ 'Plain text'|t('mailer') }}</summary>
                 <pre class="mailer-preview-text">{{ send.bodyText }}</pre>

@@ -7,9 +7,7 @@
     <section class="mailer-mode" data-mailer-mode="custom">
         <div class="mailer-mode__header">
             {{ hiddenInput('modes[custom]', '') }}
-            <pk-lightswitch name="modes[custom]" value="1" {{ form.sendToCustom ? 'checked' }} data-mailer-mode-toggle="custom">
-                <span class="mailer-mode__title">{{ 'Custom recipients'|t('mailer') }}</span>
-            </pk-lightswitch>
+            <pk-lightswitch name="modes[custom]" value="1" {{ form.sendToCustom ? 'checked' }} label="{{ 'Custom recipients'|t('mailer') }}" data-mailer-mode-toggle="custom"></pk-lightswitch>
             <p class="light mailer-mode__description">{{ 'Send one email to the addresses below.'|t('mailer') }}</p>
         </div>
         <div class="mailer-mode__body" data-mailer-mode-body="custom" {{ not form.sendToCustom ? 'hidden' }}>
@@ -38,9 +36,7 @@
     <section class="mailer-mode" data-mailer-mode="groups">
         <div class="mailer-mode__header">
             {{ hiddenInput('modes[groups]', '') }}
-            <pk-lightswitch name="modes[groups]" value="1" {{ form.sendToGroups ? 'checked' }} data-mailer-mode-toggle="groups">
-                <span class="mailer-mode__title">{{ 'User groups'|t('mailer') }}</span>
-            </pk-lightswitch>
+            <pk-lightswitch name="modes[groups]" value="1" {{ form.sendToGroups ? 'checked' }} label="{{ 'User groups'|t('mailer') }}" data-mailer-mode-toggle="groups"></pk-lightswitch>
             <p class="light mailer-mode__description">{{ 'Send an email to each user in the selected groups.'|t('mailer') }}</p>
         </div>
         <div class="mailer-mode__body" data-mailer-mode-body="groups" {{ not form.sendToGroups ? 'hidden' }}>
@@ -65,9 +61,7 @@
     <section class="mailer-mode" data-mailer-mode="users">
         <div class="mailer-mode__header">
             {{ hiddenInput('modes[users]', '') }}
-            <pk-lightswitch name="modes[users]" value="1" {{ form.sendToUsers ? 'checked' }} data-mailer-mode-toggle="users">
-                <span class="mailer-mode__title">{{ 'Users'|t('mailer') }}</span>
-            </pk-lightswitch>
+            <pk-lightswitch name="modes[users]" value="1" {{ form.sendToUsers ? 'checked' }} label="{{ 'Users'|t('mailer') }}" data-mailer-mode-toggle="users"></pk-lightswitch>
             <p class="light mailer-mode__description">{{ 'Send an email to each of the selected users.'|t('mailer') }}</p>
         </div>
         <div class="mailer-mode__body" data-mailer-mode-body="users" {{ not form.sendToUsers ? 'hidden' }}>

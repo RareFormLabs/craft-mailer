@@ -44,7 +44,7 @@ class SandboxTwig
      * @param string|null $timezone
      * @throws TwigError
      */
-    public static function render(string $template, array $context, bool $html, ?string $timezone = null): string
+    public static function render(string $template, array $context, bool $html, ?string $timezone = null, bool $strict = false): string
     {
         self::guard($template);
 
@@ -52,7 +52,7 @@ class SandboxTwig
             $template = self::decodeDelimiters($template);
         }
 
-        $twig = self::createEnvironment($html, $timezone);
+        $twig = self::createEnvironment($html, $timezone, $strict);
 
         return $twig->createTemplate($template)->render($context);
     }
@@ -60,12 +60,14 @@ class SandboxTwig
     /**
      * Validates a template by compiling and rendering it with the given context.
      *
+     * Validation uses strict variables, so references to anything that isn’t defined (e.g. `craft`) are reported.
+     *
      * @return string|null The error message, or `null` if the template is valid.
      */
     public static function validate(string $template, array $context, bool $html, ?string $timezone = null): ?string
     {
         try {
-            self::render($template, $context, $html, $timezone);
+            self::render($template, $context, $html, $timezone, true);
         } catch (TwigError $e) {
             return $e->getRawMessage() . ($e->getTemplateLine() > 0 ? sprintf(' (line %d)', $e->getTemplateLine()) : '');
         }
@@ -76,11 +78,11 @@ class SandboxTwig
     /**
      * Creates the sandboxed environment.
      */
-    public static function createEnvironment(bool $html, ?string $timezone = null): Environment
+    public static function createEnvironment(bool $html, ?string $timezone = null, bool $strict = false): Environment
     {
         $twig = new Environment(new ArrayLoader(), [
             'autoescape' => $html ? 'html' : false,
-            'strict_variables' => false,
+            'strict_variables' => $strict,
             'cache' => false,
             'optimizations' => -1,
         ]);

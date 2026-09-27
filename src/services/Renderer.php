@@ -176,15 +176,16 @@ class Renderer extends Component
         $safeMode ??= Plugin::getInstance()->getSettings()->safeMode;
 
         if ($safeMode) {
-            $leftovers = SafeTemplate::leftovers($template, $this->getTokens());
+            $tokens = $this->getTokens();
+            $errors = [];
 
-            if ($leftovers) {
-                return Craft::t('mailer', 'Only the listed variables can be used. Remove or fix: {snippets}', [
-                    'snippets' => implode(', ', array_map(fn($snippet) => "“{$snippet}”", $leftovers)),
-                ]);
+            foreach (SafeTemplate::leftovers($template, $tokens) as $snippet) {
+                $errors[] = SafeTemplate::isFormattedToken($snippet, $tokens)
+                    ? Craft::t('mailer', 'Remove the formatting inside “{snippet}”.', ['snippet' => $snippet])
+                    : Craft::t('mailer', '“{snippet}” isn’t an available variable.', ['snippet' => $snippet]);
             }
 
-            return null;
+            return $errors ? implode(' ', $errors) . ' ' . Craft::t('mailer', 'Only the listed variables can be used in safe mode.') : null;
         }
 
         return SandboxTwig::validate($template, $context, $html, Craft::$app->getTimeZone());

@@ -38,7 +38,8 @@ class SafeTemplateTest extends TestCase
     public function testFindsLeftoverTwig(): void
     {
         $this->assertNotEmpty(SafeTemplate::leftovers('{{ craft.app.config }}', self::TOKENS));
-        $this->assertNotEmpty(SafeTemplate::leftovers('{% if true %}yes{% endif %}', self::TOKENS));
+        $this->assertSame(['{% if true %}', '{% endif %}'], SafeTemplate::leftovers('{% if true %}yes{% endif %}', self::TOKENS));
+        $this->assertSame(['Hi {{ there'], SafeTemplate::leftovers('Hi {{ there', self::TOKENS));
         $this->assertNotEmpty(SafeTemplate::leftovers('{# comment #}', self::TOKENS));
     }
 
@@ -46,7 +47,8 @@ class SafeTemplateTest extends TestCase
     {
         $leftovers = SafeTemplate::leftovers('<p>{{ user.<strong>firstName</strong> }}</p>', self::TOKENS);
 
-        $this->assertNotEmpty($leftovers);
-        $this->assertStringNotContainsString('<strong>', $leftovers[0]);
+        $this->assertSame(['{{ user.firstName }}'], $leftovers);
+        $this->assertTrue(SafeTemplate::isFormattedToken($leftovers[0], self::TOKENS));
+        $this->assertFalse(SafeTemplate::isFormattedToken('{{ craft.app }}', self::TOKENS));
     }
 }

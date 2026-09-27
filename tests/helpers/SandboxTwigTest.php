@@ -50,7 +50,14 @@ class SandboxTwigTest extends TestCase
             'source' => ['{{ source("foo") }}'],
             'macro' => ['{% macro foo() %}{% endmacro %}'],
             'syntax error' => ['{{ user.firstName '],
+            'undefined variable' => ['{{ craft.app.config }}'],
         ];
+    }
+
+    public function testRenderingIgnoresUndefinedVariables(): void
+    {
+        $this->assertSame('Hi ', SandboxTwig::render('Hi {{ craft.app }}', $this->context, false));
+        $this->assertNull(SandboxTwig::validate('Hi {{ user.nickname|default("x") }}', $this->context, false));
     }
 
     public function testAllowsDotsInsideStrings(): void

@@ -83,9 +83,10 @@ class Plugin extends \craft\base\Plugin
             $this->getAttachments()->gc();
         });
 
+        $this->registerPermissions();
+
         if (Craft::$app->getRequest()->getIsCpRequest()) {
             $this->registerCpRoutes();
-            $this->registerPermissions();
         }
     }
 
