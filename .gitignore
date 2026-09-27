@@ -17,3 +17,4 @@
 /tests/_craft/storage/runtime/*
 !/tests/_craft/storage/runtime/.gitkeep
 /tests/_craft/config/project/
+/mailer-icon.sketch
