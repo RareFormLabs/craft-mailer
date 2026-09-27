@@ -13,7 +13,9 @@
    ```bash
    git tag 1.0.0 && git push origin 1.0.0
    ```
-4. Craft Console detects the tag and publishes the version to the Plugin Store (this can take a few minutes). The `create-release` workflow then creates the matching GitHub release.
+4. Craft Console detects the tag and publishes the version to the Plugin Store (this can take a few minutes). The `create-release` workflow then creates the matching GitHub release, or updates it if one already exists.
+
+`CHANGELOG.md` is the source of truth for release notes. Craft reads it, so update it before tagging.
 
 ## Optional
 - Register `rareform/craft-mailer` on [Packagist](https://packagist.org/packages/submit) so it can be installed with Composer outside the Plugin Store. It isn’t required for the Plugin Store.
