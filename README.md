@@ -220,4 +220,10 @@ composer install
 composer check-cs && composer phpstan && composer test
 ```
 
+Integration tests install Craft and Mailer into a dedicated test database, which is wiped on every run. Copy `tests/.env.example` to `tests/.env`, point it at an empty database, then:
+
+```bash
+composer test-integration
+```
+
 The built assets in `src/web/assets/cp/dist` are committed.

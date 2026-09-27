@@ -29,10 +29,14 @@
     "verbb/tiptap": "^1.0.2"
   },
   "require-dev": {
+    "codeception/codeception": "^5.2",
+    "codeception/module-asserts": "^3.0",
+    "codeception/module-yii2": "^1.1.9",
     "craftcms/ecs": "dev-main",
     "craftcms/phpstan": "dev-main",
     "phpstan/phpstan": "^2.1",
-    "phpunit/phpunit": "^10.5"
+    "phpunit/phpunit": "^10.5",
+    "vlucas/phpdotenv": "^5.4"
   },
   "autoload": {
     "psr-4": {
@@ -54,7 +58,8 @@
     "check-cs": "php -d error_reporting=8191 vendor/bin/ecs check --ansi",
     "fix-cs": "php -d error_reporting=8191 vendor/bin/ecs check --ansi --fix",
     "phpstan": "phpstan --memory-limit=1G",
-    "test": "phpunit"
+    "test": "phpunit",
+    "test-integration": "codecept run integration"
   },
   "config": {
     "platform": {

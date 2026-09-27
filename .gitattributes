@@ -12,3 +12,4 @@
 /tsconfig.json export-ignore
 /vite.config.ts export-ignore
 /src/web/assets/cp/src export-ignore
+/codeception.yml export-ignore

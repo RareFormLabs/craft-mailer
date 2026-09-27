@@ -17,6 +17,19 @@ jobs:
       fail-fast: false
       matrix:
         php: ['8.2', '8.3', '8.4']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: craft_mailer_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
     steps:
       - uses: actions/checkout@v5
 
@@ -35,8 +48,16 @@ jobs:
       - name: Static analysis
         run: composer phpstan
 
-      - name: Tests
+      - name: Unit tests
         run: composer test
+
+      - name: Integration tests
+        run: composer test-integration
+        env:
+          CRAFT_DB_DSN: mysql:host=127.0.0.1;port=3306;dbname=craft_mailer_test
+          CRAFT_DB_USER: root
+          CRAFT_DB_PASSWORD: root
+          CRAFT_SECURITY_KEY: mailer-ci-security-key
 
   assets:
     name: Control panel assets

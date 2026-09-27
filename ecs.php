@@ -10,6 +10,12 @@ return static function(ECSConfig $ecsConfig): void {
         __FILE__,
     ]);
 
+    $ecsConfig->skip([
+        __DIR__ . '/tests/_craft',
+        __DIR__ . '/tests/_output',
+        __DIR__ . '/tests/_support/_generated',
+    ]);
+
     $ecsConfig->parallel();
     $ecsConfig->sets([SetList::CRAFT_CMS_4]);
 };

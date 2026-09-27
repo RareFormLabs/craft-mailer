@@ -1,0 +1,16 @@
+# Integration tests: a real Craft install with Mailer installed.
+actor: IntegrationTester
+modules:
+  enabled:
+    - \craft\test\Craft:
+        configFile: 'tests/_craft/config/test.php'
+        entryUrl: 'https://mailer.test/index.php'
+        projectConfig: {}
+        migrations: []
+        plugins:
+          - class: '\rareform\mailer\Plugin'
+            handle: mailer
+        cleanup: false
+        transaction: true
+        dbSetup: {clean: true, setupCraft: true}
+    - Asserts
