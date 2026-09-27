@@ -36,10 +36,14 @@ Mailer is a modern take on the classic [Craft Mailer](https://github.com/victor-
 
 ## Installation
 
+Install Mailer from the Plugin Store in your control panel (**Plugin Store** → search for “Mailer” → **Try** or **Buy**), or with Composer:
+
 ```bash
 composer require rareform/craft-mailer
 php craft plugin/install mailer
 ```
+
+Mailer is a commercial plugin. You can try it for free in development environments, and buy a license from the Plugin Store when you’re ready to use it in production.
 
 ## Usage
 
@@ -139,7 +143,7 @@ return [
     'embedImages' => false,
 
     // Maximum combined size of attachments and embedded images, in bytes (0 = no limit)
-    'maxAttachmentSize' => 10485760,
+    'maxAttachmentSize' => 10000000,
 
     // Where attachments are stored while a send is in progress.
     // Must be reachable by the server that runs the queue.
@@ -208,6 +212,10 @@ Other events:
 | `Sends::EVENT_AFTER_COMPLETE` | After a send finishes, fails or is cancelled | – |
 | `Delivery::EVENT_BEFORE_SEND_EMAIL` | Before each email is sent. The `message` can be modified. | Yes (the recipient is skipped) |
 | `Delivery::EVENT_AFTER_SEND_EMAIL` | After each email is sent or fails | – |
+
+## License
+
+Mailer is licensed under the [Craft License](LICENSE.md). One license is needed per Craft project, and includes a year of updates.
 
 ## Development
 

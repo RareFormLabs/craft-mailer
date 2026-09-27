@@ -65,7 +65,7 @@ class Settings extends Model
     /**
      * @var int The maximum combined size of all attachments, in bytes. `0` disables the limit.
      */
-    public int $maxAttachmentSize = 10485760;
+    public int $maxAttachmentSize = 10000000;
 
     /**
      * @var string Where attachments are stored while a send is in progress.

@@ -1,6 +1,6 @@
 {
   "name": "rareform/craft-mailer",
-  "description": "Send emails to users, user groups and custom recipients from the Craft CMS control panel.",
+  "description": "Send personalized emails to users, user groups and any address from the Craft control panel, with scheduling, batching, logs and unsubscribes.",
   "type": "craft-plugin",
   "keywords": [
     "cms",
@@ -8,9 +8,11 @@
     "craft-plugin",
     "mailer",
     "email",
-    "newsletter"
+    "newsletter",
+    "bulk email",
+    "email marketing"
   ],
-  "license": "MIT",
+  "license": "proprietary",
   "authors": [
     {
       "name": "Rareform"
@@ -51,8 +53,12 @@
   "extra": {
     "name": "Mailer",
     "handle": "mailer",
+    "class": "rareform\\mailer\\Plugin",
+    "description": "Send personalized emails to users, user groups and any address from the control panel.",
     "developer": "RareForm",
-    "documentationUrl": "https://github.com/RareFormLabs/craft-mailer/blob/main/README.md"
+    "developerUrl": "https://github.com/RareFormLabs",
+    "documentationUrl": "https://github.com/RareFormLabs/craft-mailer/blob/main/README.md",
+    "changelogUrl": "https://raw.githubusercontent.com/RareFormLabs/craft-mailer/main/CHANGELOG.md"
   },
   "scripts": {
     "check-cs": "php -d error_reporting=8191 vendor/bin/ecs check --ansi",
