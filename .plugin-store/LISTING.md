@@ -69,6 +69,10 @@ Regenerate them with `.plugin-store/screenshots.mjs` (instructions at the top of
 - Issues: https://github.com/RareFormLabs/craft-mailer/issues
 
 ## Pricing
-Set in Craft Console. Craft suggests $49–$99 for plugins with complex features, and renewals at 20–50% of the price. Pixel & Tonic takes 20%.
+- **Price:** $39
+- **Renewal:** $19/year (updates after the first year)
 
-Suggested: **$79**, renewal **$29/year**. It sits in the middle of that range, under full newsletter suites, and the renewal pays for ongoing Craft compatibility.
+Set in Craft Console. Pixel & Tonic takes 20% of each sale.
+
+## Support
+- **Support email:** me@chasegiunta.com

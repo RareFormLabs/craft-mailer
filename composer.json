@@ -19,6 +19,7 @@
     }
   ],
   "support": {
+    "email": "me@chasegiunta.com",
     "source": "https://github.com/RareFormLabs/craft-mailer",
     "docs": "https://github.com/RareFormLabs/craft-mailer/blob/main/README.md",
     "issues": "https://github.com/RareFormLabs/craft-mailer/issues"
@@ -57,6 +58,7 @@
     "description": "Send personalized emails to users, user groups and any address from the control panel.",
     "developer": "RareForm",
     "developerUrl": "https://github.com/RareFormLabs",
+    "developerEmail": "me@chasegiunta.com",
     "documentationUrl": "https://github.com/RareFormLabs/craft-mailer/blob/main/README.md",
     "changelogUrl": "https://raw.githubusercontent.com/RareFormLabs/craft-mailer/main/CHANGELOG.md"
   },

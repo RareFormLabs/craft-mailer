@@ -1,6 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Mailer">
-  <rect width="64" height="64" rx="14" fill="#1F2937"/>
-  <rect x="11" y="18" width="42" height="29" rx="4" fill="#F9FAFB"/>
-  <path d="M13 21.5 32 35l19-13.5" stroke="#E4405F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M13 44.5 26 33M51 44.5 38 33" stroke="#D1D5DB" stroke-width="2.5" stroke-linecap="round"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="2048px" height="2048px" viewBox="0 0 2048 2048" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Mailer</title>
+    <g id="mailer-icon" stroke="none" fill="none" fill-rule="evenodd">
+        <path d="M807.623838,0 L1240.37616,5.80373849e-14 C1521.20457,-3.3721392e-14 1623.03973,29.2400675 1725.7064,84.1468017 C1828.37306,139.053536 1908.94646,219.626937 1963.8532,322.293603 C2018.75993,424.96027 2048,526.795435 2048,807.623838 L2048,1240.37616 C2048,1521.20457 2018.75993,1623.03973 1963.8532,1725.7064 C1908.94646,1828.37306 1828.37306,1908.94646 1725.7064,1963.8532 C1623.03973,2018.75993 1521.20457,2048 1240.37616,2048 L807.623838,2048 C526.795435,2048 424.96027,2018.75993 322.293603,1963.8532 C219.626937,1908.94646 139.053536,1828.37306 84.1468017,1725.7064 C29.2400675,1623.03973 0,1521.20457 0,1240.37616 L0,807.623838 C0,526.795435 29.2400675,424.96027 84.1468017,322.293603 C139.053536,219.626937 219.626937,139.053536 322.293603,84.1468017 C424.96027,29.2400675 526.795435,0 807.623838,0 Z" id="Rectangle" fill="#3F50F7"></path>
+        <g id="Group" stroke-width="1" transform="translate(341, 461)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M82.7878788,212.4377 C82.7878788,95.1115979 177.868677,0 295.156785,0 L1153.63109,0 C1270.9192,0 1366,95.1115979 1366,212.4377 L1366,914.5623 C1366,1031.8884 1270.9192,1127 1153.63109,1127 L566.916996,1127" id="Path" stroke="#C6CEFF" stroke-width="120"></path>
+            <polyline id="Path" stroke="#FFFFFF" stroke-width="120" points="337.450593 366.730116 725.477814 674.219649 1111.33729 364.564696"></polyline>
+            <line x1="1.13686838e-13" y1="653.515974" x2="262.761528" y2="653.515974" id="Path" stroke="#FFFFFF" stroke-width="120"></line>
+            <line x1="158.376812" y1="842.549521" x2="498.527009" y2="842.549521" id="Path" stroke="#FFFFFF" stroke-width="120"></line>
+            <line x1="26.9960474" y1="1031.58307" x2="255.562582" y2="1031.58307" id="Path" stroke="#FFFFFF" stroke-width="120"></line>
+        </g>
+    </g>
 </svg>

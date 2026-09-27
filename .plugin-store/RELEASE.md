@@ -1,8 +1,8 @@
 # Releasing Mailer
 
 ## Before the first release
-- [ ] Final icon: `src/icon.svg` (square, full color) and `src/icon-mask.svg` (single color, no strokes).
-- [ ] Decide the price and renewal price (see LISTING.md).
+- [x] Final icon: `src/icon.svg` (square, full color) and `src/icon-mask.svg` (single color, no strokes).
+- [x] Price: $39, renewal $19/year (enter these in Craft Console).
 - [ ] In [Craft Console](https://console.craftcms.com): create or choose the RareForm organization, connect GitHub, and add payout details (needed for a commercial plugin).
 - [ ] Submit the plugin as **commercial** from the start. Craft doesn’t allow a free plugin to become commercial later.
 
