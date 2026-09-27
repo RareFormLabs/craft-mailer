@@ -16,7 +16,7 @@ Mailer is a modern take on the classic [Craft Mailer](https://github.com/victor-
   Each person only gets one email, even if they’re selected more than once. Suspended, pending and inactive users are skipped, and the reason is logged.
 - **Rich text editor** for the message, with headings, lists, links and more.
 - **Personalization** with variables like `{{ user.firstName }}`, inserted from a menu.
-- **Preview and test sends**, rendered with your own details.
+- **Preview** as the first selected recipient (with a warning for any variables that would be empty), and **test sends** to yourself.
 - **Your email template:** messages are wrapped in the site’s HTML email template (Settings → Email), with an automatic plain-text version.
 - **Attachments**, uploaded or picked from your assets.
 - **Batch sending** through Craft’s queue: send _N_ emails, wait _X_ seconds, repeat.
@@ -43,7 +43,7 @@ php craft plugin/install mailer
 2. Write a subject and message. Use the **Variables** menu to personalize them.
 3. On the **Recipients** tab, choose custom recipients, user groups and/or users. The number of emails is shown as you go.
 4. Optionally set a Reply-To address and add attachments in the sidebar.
-5. Use **Preview** or **Send test to me** to check the message, then **Send…** and confirm.
+5. Use **Preview** (rendered for the first selected recipient) or **Send test to me** (rendered for you) to check the message, then **Send…** and confirm.
 
 You’ll be taken to the send’s log, where you can follow its progress.
 

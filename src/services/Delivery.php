@@ -69,18 +69,36 @@ class Delivery extends Component
     }
 
     /**
-     * Renders a preview of a compose form for the given user.
+     * Renders a preview of a compose form, personalized for a recipient.
      *
-     * @return array{subject: string, html: string, text: string}
+     * @param ComposeForm $form
+     * @param User $currentUser The user previewing; used when no recipient is given
+     * @param RecipientData|null $recipient The recipient to personalize the preview for
+     * @param User|null $recipientUser The recipient’s user account, if any
+     * @return array{subject: string, html: string, text: string, previewAs: string, emptyVariables: string[]}
      * @throws Throwable
      */
-    public function preview(ComposeForm $form, User $user): array
+    public function preview(ComposeForm $form, User $currentUser, ?RecipientData $recipient = null, ?User $recipientUser = null): array
     {
         $renderer = Plugin::getInstance()->getRenderer();
-        $recipient = $this->currentUserRecipient($user);
-        $variables = $renderer->getContext($user, $recipient);
+
+        if ($recipient === null) {
+            $recipient = $this->currentUserRecipient($currentUser);
+            $recipientUser = $currentUser;
+        }
+
+        $variables = $renderer->getContext($recipientUser, $recipient);
         $content = $form->getBodyContent();
-        $html = $renderer->personalize($renderer->contentToHtml($content), $variables, true);
+        $htmlTemplate = $renderer->contentToHtml($content);
+        $textTemplate = $renderer->contentToText($content);
+        $html = $renderer->personalize($htmlTemplate, $variables, true);
+
+        $emptyVariables = array_values(array_filter(
+            $renderer->getUsedTokens($form->subject . "\n" . $textTemplate),
+            fn(string $token) => $renderer->getValue($variables, $token) === '',
+        ));
+
+        $name = $recipientUser?->getFullName() ?: $recipient->name;
 
         return [
             'subject' => self::singleLine($renderer->personalize($form->subject, $variables, false)),
@@ -89,7 +107,9 @@ class Delivery extends Component
                 'fromName' => $form->fromName,
                 'replyToEmail' => $form->replyTo ?: null,
             ]),
-            'text' => $renderer->personalize($renderer->contentToText($content), $variables, false),
+            'text' => $renderer->personalize($textTemplate, $variables, false),
+            'previewAs' => $name ? sprintf('%s <%s>', $name, $recipient->email) : $recipient->email,
+            'emptyVariables' => $emptyVariables,
         ];
     }
 

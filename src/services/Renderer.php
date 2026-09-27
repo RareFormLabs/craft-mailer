@@ -96,6 +96,28 @@ class Renderer extends Component
     }
 
     /**
+     * Returns the registered variable tokens used in a template.
+     *
+     * @return string[]
+     */
+    public function getUsedTokens(string $template): array
+    {
+        if (!preg_match_all(SafeTemplate::pattern($this->getTokens()), $template, $matches)) {
+            return [];
+        }
+
+        return array_values(array_unique($matches[1]));
+    }
+
+    /**
+     * Returns the value of a variable token (e.g. `user.firstName`) from a recipient’s variables.
+     */
+    public function getValue(array $context, string $token): string
+    {
+        return self::valueAt($context, $token);
+    }
+
+    /**
      * Renders a TipTap content array to HTML.
      */
     public function contentToHtml(array $content): string
@@ -118,6 +140,11 @@ class Renderer extends Component
      */
     public function getContext(?User $user, RecipientData $recipient): array
     {
+        // Custom emails use the first To address’s user account, if there is one
+        if ($user === null && $recipient->getIsCustom() && $recipient->email !== '') {
+            $user = User::find()->email($recipient->email)->status(null)->one();
+        }
+
         $variables = [
             'user' => [
                 'id' => $user?->id,

@@ -384,7 +384,7 @@ function renderConfirm(dialog: PkDialog, summary: Summary, subject: string): voi
     }
 }
 
-function renderPreview(dialog: PkDialog | null, data: { subject: string; html: string; text: string }): void {
+function renderPreview(dialog: PkDialog | null, data: { subject: string; html: string; text: string; previewAs: string; emptyVariables: string[] }): void {
     if (!dialog) {
         return;
     }
@@ -403,6 +403,22 @@ function renderPreview(dialog: PkDialog | null, data: { subject: string; html: s
 
     if (text) {
         text.textContent = data.text;
+    }
+
+    const previewAs = dialog.querySelector<HTMLElement>('[data-mailer-preview-as]');
+    const empty = dialog.querySelector<HTMLElement>('[data-mailer-preview-empty]');
+    const emptyText = dialog.querySelector<HTMLElement>('[data-mailer-preview-empty-text]');
+
+    if (previewAs) {
+        previewAs.textContent = data.previewAs;
+    }
+
+    if (empty && emptyText) {
+        const tokens = data.emptyVariables ?? [];
+        empty.hidden = tokens.length === 0;
+        emptyText.textContent = tokens.length
+            ? t('These variables are empty for this person: {variables}', { variables: tokens.map((token) => `{{ ${token} }}`).join(', ') })
+            : '';
     }
 }
 

@@ -51,6 +51,7 @@ class MailerCpAsset extends AssetBundle
                 'Send the message to {num} {num, plural, =1{email address} other{email addresses}}?',
                 'Sending test…',
                 'Test mode is on: every email will go to {address} instead, without CC or BCC.',
+                'These variables are empty for this person: {variables}',
                 '{num} {num, plural, =1{email} other{emails}}',
                 '{num} skipped',
                 '{num} custom email with {addresses} {addresses, plural, =1{address} other{addresses}}',

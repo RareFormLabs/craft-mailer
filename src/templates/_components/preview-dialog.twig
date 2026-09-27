@@ -1,5 +1,11 @@
 <pk-dialog class="mailer-preview-dialog" size="wide" label="{{ 'Preview'|t('mailer') }}" data-mailer-preview-dialog>
-    <p class="light mailer-preview-dialog__intro">{{ 'Rendered with your own user details.'|t('mailer') }}</p>
+    <p class="light mailer-preview-dialog__intro">
+        {{ 'Previewing as'|t('mailer') }} <strong data-mailer-preview-as></strong>
+    </p>
+    <p class="warning has-icon" data-mailer-preview-empty hidden>
+        <span class="icon" aria-hidden="true"></span>
+        <span data-mailer-preview-empty-text></span>
+    </p>
     <dl class="mailer-preview-dialog__subject">
         <dt>{{ 'Subject'|t('mailer') }}</dt>
         <dd data-mailer-preview-subject></dd>

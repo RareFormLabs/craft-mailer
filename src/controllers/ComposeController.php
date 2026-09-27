@@ -167,8 +167,17 @@ class ComposeController extends Controller
             return $this->asModelFailure($form, Craft::t('mailer', 'The message can’t be previewed.'), 'form');
         }
 
+        // Preview as the first person who’ll receive the email, preferring users over the custom email
+        $recipients = array_filter(
+            $plugin->getRecipients()->resolve($form),
+            fn(RecipientData $recipient) => $recipient->status !== RecipientData::STATUS_SKIPPED,
+        );
+        usort($recipients, fn(RecipientData $a, RecipientData $b) => (int)$a->getIsCustom() <=> (int)$b->getIsCustom());
+        $recipient = $recipients[0] ?? null;
+        $recipientUser = $recipient?->userId ? User::find()->id($recipient->userId)->status(null)->one() : null;
+
         try {
-            return $this->asJson($plugin->getDelivery()->preview($form, $this->user()));
+            return $this->asJson($plugin->getDelivery()->preview($form, $this->user(), $recipient, $recipientUser));
         } catch (Throwable $e) {
             return $this->asFailure($e->getMessage());
         }
