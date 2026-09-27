@@ -95,6 +95,8 @@ class LogsController extends Controller
             'totalPages' => $totalPages,
             'total' => $total,
             'isStalled' => $sendsService->isStalled($send),
+            'canResume' => $sendsService->canResume($send),
+            'retryError' => $send->failedCount ? $sendsService->getRetryError($send) : null,
             'canManage' => Craft::$app->getUser()->checkPermission(Plugin::PERMISSION_MANAGE_LOGS),
             'canSend' => Craft::$app->getUser()->checkPermission(Plugin::PERMISSION_SEND),
         ]);
@@ -130,6 +132,37 @@ class LogsController extends Controller
         }
 
         return $this->asSuccess(Craft::t('mailer', 'Send resumed.'));
+    }
+
+    /**
+     * Creates a new send for a send’s failed recipients.
+     */
+    public function actionRetry(): ?Response
+    {
+        $this->requirePostRequest();
+        $this->requirePermission(Plugin::PERMISSION_MANAGE_LOGS);
+        $this->requirePermission(Plugin::PERMISSION_SEND);
+
+        $sends = Plugin::getInstance()->getSends();
+        $send = $sends->getSendById((int)$this->request->getRequiredBodyParam('sendId'));
+
+        if (!$send) {
+            throw new \yii\web\NotFoundHttpException('Send not found');
+        }
+
+        try {
+            $retry = $sends->retryFailed($send, static::currentUser());
+        } catch (\Throwable $e) {
+            return $this->asFailure($e->getMessage());
+        }
+
+        if (!$retry) {
+            return $this->asFailure(Craft::t('mailer', 'The retry was prevented.'));
+        }
+
+        return $this->asSuccess(Craft::t('mailer', 'Retrying {num, number} failed {num, plural, =1{email} other{emails}}.', [
+            'num' => $retry->totalRecipients,
+        ]), ['sendId' => $retry->id], $retry->getCpUrl());
     }
 
     /**

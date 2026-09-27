@@ -13,6 +13,7 @@ use craft\helpers\Template;
 use craft\web\View;
 use rareform\mailer\events\DefineVariablesEvent;
 use rareform\mailer\events\RegisterVariablesEvent;
+use rareform\mailer\helpers\LinkVariables;
 use rareform\mailer\helpers\PlainText;
 use rareform\mailer\helpers\SafeTemplate;
 use rareform\mailer\helpers\SandboxTwig;
@@ -54,6 +55,32 @@ class Renderer extends Component
     private ?array $_variables = null;
 
     /**
+     * Custom field types that can be used as variables.
+     */
+    private const VARIABLE_FIELD_TYPES = [
+        \craft\fields\PlainText::class,
+        \craft\fields\Email::class,
+        \craft\fields\Url::class,
+        \craft\fields\Number::class,
+        \craft\fields\Date::class,
+        \craft\fields\Dropdown::class,
+        \craft\fields\RadioButtons::class,
+        \craft\fields\Lightswitch::class,
+        \craft\fields\Checkboxes::class,
+        \craft\fields\MultiSelect::class,
+    ];
+
+    /**
+     * The `user` variables every recipient has.
+     */
+    private const BASE_USER_KEYS = ['id', 'firstName', 'lastName', 'fullName', 'email', 'username'];
+
+    /**
+     * @var \craft\base\FieldInterface[]|null
+     */
+    private ?array $_userFields = null;
+
+    /**
      * @var array<string, string|false> Rendered email templates, indexed by their variables.
      */
     private array $_wrappers = [];
@@ -76,6 +103,11 @@ class Renderer extends Component
                 ['token' => 'user.fullName', 'label' => Craft::t('mailer', 'Full name')],
                 ['token' => 'user.email', 'label' => Craft::t('mailer', 'Email')],
                 ['token' => 'user.username', 'label' => Craft::t('mailer', 'Username')],
+                ['token' => 'unsubscribeUrl', 'label' => Craft::t('mailer', 'Unsubscribe link')],
+                ...array_map(fn($field) => [
+                    'token' => "user.$field->handle",
+                    'label' => Craft::t('site', $field->name),
+                ], $this->getUserFields()),
             ],
         ]);
         $this->trigger(self::EVENT_REGISTER_VARIABLES, $event);
@@ -155,7 +187,13 @@ class Renderer extends Component
                 'email' => (string)($user->email ?? $recipient->email),
                 'username' => (string)($user->username ?? ''),
             ],
+            // Set per email when unsubscribe links are enabled
+            'unsubscribeUrl' => '',
         ];
+
+        foreach ($this->getUserFields() as $field) {
+            $variables['user'][$field->handle] = $user ? $this->fieldValue($field, $user->getFieldValue($field->handle)) : '';
+        }
 
         if ($this->hasEventHandlers(self::EVENT_DEFINE_VARIABLES)) {
             $event = new DefineVariablesEvent([
@@ -182,6 +220,21 @@ class Renderer extends Component
     public function personalize(string $template, array $context, bool $html, ?bool $safeMode = null): string
     {
         $safeMode ??= Plugin::getInstance()->getSettings()->safeMode;
+
+        // Variables inside links are URL-encoded first
+        if ($html) {
+            $template = LinkVariables::apply($template, function(string $expression) use ($context, $safeMode) {
+                if ($safeMode) {
+                    return in_array($expression, $this->getTokens(), true) ? self::valueAt($context, $expression) : null;
+                }
+
+                try {
+                    return SandboxTwig::render('{{ ' . $expression . ' }}', $context, false, Craft::$app->getTimeZone());
+                } catch (Throwable) {
+                    return null;
+                }
+            });
+        }
 
         if ($safeMode) {
             $values = [];
@@ -322,6 +375,67 @@ class Renderer extends Component
         }
     }
 
+    /**
+     * Returns the user custom fields that can be used as variables.
+     *
+     * @return \craft\base\FieldInterface[]
+     */
+    public function getUserFields(): array
+    {
+        if ($this->_userFields !== null) {
+            return $this->_userFields;
+        }
+
+        $fields = [];
+        $layout = Craft::$app->getFields()->getLayoutByType(User::class);
+
+        foreach ($layout->getCustomFields() as $field) {
+            if (
+                in_array(get_class($field), self::VARIABLE_FIELD_TYPES, true) &&
+                !in_array($field->handle, self::BASE_USER_KEYS, true) &&
+                preg_match('/^[a-zA-Z_]\w*$/', (string)$field->handle)
+            ) {
+                $fields[] = $field;
+            }
+        }
+
+        return $this->_userFields = $fields;
+    }
+
+    /**
+     * Converts a custom field value to a scalar for templates.
+     */
+    private function fieldValue(\craft\base\FieldInterface $field, mixed $value): string|int|float|bool
+    {
+        if ($value === null) {
+            return $field instanceof \craft\fields\Lightswitch ? false : '';
+        }
+
+        if ($value instanceof \DateTime) {
+            return Craft::$app->getFormatter()->asDate($value, 'long');
+        }
+
+        if ($value instanceof \craft\fields\data\SingleOptionFieldData) {
+            return (string)($value->label ?? $value->value ?? '');
+        }
+
+        if ($value instanceof \craft\fields\data\MultiOptionsFieldData) {
+            $labels = [];
+
+            foreach ($value as $option) {
+                $labels[] = (string)$option->label;
+            }
+
+            return implode(', ', $labels);
+        }
+
+        if (is_bool($value) || is_int($value) || is_float($value)) {
+            return $value;
+        }
+
+        return is_scalar($value) || $value instanceof \Stringable ? (string)$value : '';
+    }
+
     private function basicDocument(string $bodyHtml): string
     {
         $language = htmlspecialchars(Craft::$app->language, ENT_QUOTES);
@@ -342,6 +456,10 @@ class Renderer extends Component
             }
 
             $value = $value[$segment];
+        }
+
+        if (is_bool($value)) {
+            return $value ? Craft::t('mailer', 'Yes') : Craft::t('mailer', 'No');
         }
 
         return is_scalar($value) ? (string)$value : '';

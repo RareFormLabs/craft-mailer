@@ -1,44 +1,27 @@
-// Editor extensions must be registered before the components render.
-import './images';
-import { components } from './components';
-import { initCompose } from './compose';
-import { initConfirmForms, initDialogCloseButtons } from './dialogs';
-import { initCheckedFormValueFix } from './form-fixes';
+/**
+ * Entry point.
+ *
+ * Craft loads this file with a cache-busting query string (`mailer.js?v=…`). All other code lives in chunks, which
+ * are only ever loaded from here: if a chunk imported `mailer.js` (e.g. for Vite’s preload helper), the browser
+ * would load it a second time under a different URL and run everything twice.
+ */
 import './mailer.css';
 
-// Referenced so bundlers keep every component definition.
-void components;
+async function boot(): Promise<void> {
+    const { init } = await import('./app');
+    init();
 
-function init(): void {
-    initCheckedFormValueFix();
-    initDialogCloseButtons();
-    initConfirmForms();
-
+    // The rich text editor is most of Mailer’s JavaScript, so it’s only loaded on the compose screen
     const compose = document.querySelector<HTMLFormElement>('form[data-mailer-compose]');
 
     if (compose) {
+        const { initCompose } = await import('./compose-entry');
         initCompose(compose);
-    }
-
-    const refresh = document.querySelector<HTMLElement>('[data-mailer-autorefresh]');
-
-    if (refresh) {
-        const seconds = Math.max(5, Number(refresh.dataset.mailerAutorefresh) || 10);
-
-        window.setTimeout(function reload() {
-            // Don’t reload while a dialog is open
-            if (document.querySelector('pk-dialog[open]')) {
-                window.setTimeout(reload, seconds * 1000);
-                return;
-            }
-
-            window.location.reload();
-        }, seconds * 1000);
     }
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', boot);
 } else {
-    init();
+    boot();
 }

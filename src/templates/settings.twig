@@ -76,6 +76,27 @@
         {% include 'mailer/_components/errors' with {errors: settings.getErrors('batchTime')} only %}
     </pk-field>
 
+    <pk-field
+        label="{{ 'Pause After Failures'|t('mailer') }}"
+        instructions="{{ 'Pause a send after this many emails fail in a row, e.g. when the mail server is down. Set to 0 to never pause.'|t('mailer') }}"
+        for="maxConsecutiveFailures"
+        warning="{{ overrideWarning('maxConsecutiveFailures', overrides) }}"
+    >
+        <pk-input id="maxConsecutiveFailures" type="number" name="maxConsecutiveFailures" value="{{ settings.maxConsecutiveFailures }}" min="0" step="1" {{ 'maxConsecutiveFailures' in overrides ? 'disabled' }} {{ settings.hasErrors('maxConsecutiveFailures') ? 'invalid' }}></pk-input>
+        {% include 'mailer/_components/errors' with {errors: settings.getErrors('maxConsecutiveFailures')} only %}
+    </pk-field>
+
+    <hr>
+
+    <pk-field
+        label="{{ 'Unsubscribe Links'|t('mailer') }}"
+        instructions="{{ 'Add an unsubscribe link to emails sent to users, plus the one-click unsubscribe headers Gmail and Yahoo expect for bulk email. Put `{{ unsubscribeUrl }}` in a message to place the link yourself.'|t('mailer') }}"
+        warning="{{ overrideWarning('unsubscribeLinks', overrides) }}"
+    >
+        {% if 'unsubscribeLinks' not in overrides %}{{ hiddenInput('unsubscribeLinks', '') }}{% endif %}
+        <pk-lightswitch name="unsubscribeLinks" value="1" {{ settings.unsubscribeLinks ? 'checked' }} {{ 'unsubscribeLinks' in overrides ? 'disabled' }}></pk-lightswitch>
+    </pk-field>
+
     <hr>
 
     <pk-field

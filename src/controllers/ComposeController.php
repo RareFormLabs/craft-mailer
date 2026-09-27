@@ -13,6 +13,7 @@ use craft\web\Controller;
 use rareform\mailer\models\ComposeForm;
 use rareform\mailer\models\RecipientData;
 use rareform\mailer\Plugin;
+use rareform\mailer\services\Saved;
 use rareform\mailer\web\assets\cp\MailerCpAsset;
 use Throwable;
 use yii\web\ForbiddenHttpException;
@@ -44,10 +45,20 @@ class ComposeController extends Controller
      * @param int|null $template The ID of a previous send to use as a template
      * @param ComposeForm|null $form A form that failed validation
      */
-    public function actionIndex(?int $template = null, ?ComposeForm $form = null): Response
+    public function actionIndex(?int $template = null, ?int $draft = null, ?ComposeForm $form = null): Response
     {
         $plugin = Plugin::getInstance();
         $templateNotice = null;
+        $draftId = $form !== null ? ((int)$this->request->getBodyParam('draftId') ?: null) : null;
+
+        if ($form === null && $draft !== null) {
+            $data = $plugin->getSaved()->getData($draft, Saved::KIND_DRAFT, $this->user()->id);
+
+            if ($data !== null) {
+                $form = ComposeForm::fromData($data);
+                $draftId = $draft;
+            }
+        }
 
         if ($form === null && $template !== null) {
             $this->requirePermission(Plugin::PERMISSION_VIEW_LOGS);
@@ -77,10 +88,14 @@ class ComposeController extends Controller
             'groups' => Craft::$app->getUserGroups()->getAllGroups(),
             'users' => $form->userIds ? User::find()->id($form->userIds)->status(null)->fixedOrder()->all() : [],
             'assets' => $form->assetIds ? Asset::find()->id($form->assetIds)->status(null)->fixedOrder()->all() : [],
+            'userCondition' => $this->prepareCondition($form),
             'canChangeSender' => $this->canChangeSender(),
             'canExport' => Craft::$app->getUser()->checkPermission(Plugin::PERMISSION_EXPORT),
             'testToEmailAddress' => $this->testToEmailAddress(),
             'templateNotice' => $templateNotice,
+            'draftId' => $draftId,
+            'templates' => $plugin->getSaved()->getAll(Saved::KIND_TEMPLATE),
+            'canManageTemplates' => Craft::$app->getUser()->checkPermission(Plugin::PERMISSION_MANAGE_TEMPLATES),
         ]);
     }
 
@@ -121,10 +136,20 @@ class ComposeController extends Controller
             return $this->failure($form, Craft::t('mailer', 'The email was prevented from sending.'));
         }
 
-        $message = Craft::t('mailer', 'Queued “{subject}” for {num, number} {num, plural, =1{recipient} other{recipients}}.', [
-            'subject' => $send->subject,
-            'num' => $send->totalRecipients - $send->skippedCount,
-        ]);
+        // The draft has been sent
+        if ($draftId = (int)$this->request->getBodyParam('draftId')) {
+            $plugin->getSaved()->delete($draftId, Saved::KIND_DRAFT, $this->user()->id);
+        }
+
+        $message = $send->scheduledFor
+            ? Craft::t('mailer', 'Scheduled “{subject}” for {date}.', [
+                'subject' => $send->subject,
+                'date' => Craft::$app->getFormatter()->asDatetime($send->scheduledFor, 'short'),
+            ])
+            : Craft::t('mailer', 'Queued “{subject}” for {num, number} {num, plural, =1{recipient} other{recipients}}.', [
+                'subject' => $send->subject,
+                'num' => $send->totalRecipients - $send->skippedCount,
+            ]);
 
         if (Craft::$app->getUser()->checkPermission(Plugin::PERMISSION_VIEW_LOGS)) {
             return $this->asSuccess($message, ['sendId' => $send->id], $send->getCpUrl());
@@ -234,6 +259,18 @@ class ComposeController extends Controller
         }
 
         return $this->asJson(Plugin::getInstance()->getImages()->getEditorData($asset));
+    }
+
+    private function prepareCondition(ComposeForm $form): \craft\elements\conditions\users\UserCondition
+    {
+        $condition = $form->getUserCondition() ?? User::createCondition();
+        $condition->mainTag = 'div';
+        $condition->id = 'mailer-user-condition';
+        // Inputs are named `userCondition[…]`
+        $condition->name = 'userCondition';
+        $condition->addRuleLabel = Craft::t('mailer', 'Add a rule');
+
+        return $condition;
     }
 
     /**

@@ -12,17 +12,19 @@ export default defineConfig({
         outDir: 'src/web/assets/cp/dist',
         emptyOutDir: true,
         cssCodeSplit: false,
+        // The preload helper would live in mailer.js and be imported back from chunks (see mailer.ts).
+        modulePreload: false,
         target: 'es2022',
         sourcemap: false,
-        // Lit + TipTap in a single file; only loaded on Mailer pages.
-        chunkSizeWarningLimit: 1200,
+        // The editor chunk (TipTap) is large, but only loads on the compose screen.
+        chunkSizeWarningLimit: 1000,
         rolldownOptions: {
             input: 'src/web/assets/cp/src/mailer.ts',
             output: {
                 format: 'es',
                 entryFileNames: 'mailer.js',
                 assetFileNames: 'mailer[extname]',
-                codeSplitting: false,
+                chunkFileNames: 'chunks/[name]-[hash].js',
             },
         },
     },

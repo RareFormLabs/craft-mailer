@@ -31,6 +31,8 @@ class Install extends Migration
      */
     public function safeDown(): bool
     {
+        $this->dropTableIfExists(Table::UNSUBSCRIBES);
+        $this->dropTableIfExists(Table::SAVED);
         $this->dropTableIfExists(Table::RECIPIENTS);
         $this->dropTableIfExists(Table::SENDS);
 
@@ -59,6 +61,8 @@ class Install extends Migration
             'sentCount' => $this->integer()->notNull()->defaultValue(0),
             'failedCount' => $this->integer()->notNull()->defaultValue(0),
             'skippedCount' => $this->integer()->notNull()->defaultValue(0),
+            'scheduledFor' => $this->dateTime(),
+            'statusMessage' => $this->string(),
             'dateStarted' => $this->dateTime(),
             'dateFinished' => $this->dateTime(),
             'dateCreated' => $this->dateTime()->notNull(),
@@ -83,6 +87,43 @@ class Install extends Migration
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),
         ]);
+
+        self::createSavedAndUnsubscribeTables($this);
+    }
+
+    /**
+     * Creates the tables added after 1.0.0 (shared with the upgrade migration).
+     */
+    public static function createSavedAndUnsubscribeTables(Migration $migration): void
+    {
+        $migration->archiveTableIfExists(Table::SAVED);
+        $migration->createTable(Table::SAVED, [
+            'id' => $migration->primaryKey(),
+            'kind' => $migration->string(10)->notNull(),
+            'name' => $migration->string(),
+            'creatorId' => $migration->integer(),
+            'data' => $migration->mediumText(),
+            'dateCreated' => $migration->dateTime()->notNull(),
+            'dateUpdated' => $migration->dateTime()->notNull(),
+            'uid' => $migration->uid(),
+        ]);
+        $migration->createIndex(null, Table::SAVED, ['kind', 'creatorId']);
+        $migration->addForeignKey(null, Table::SAVED, ['creatorId'], CraftTable::USERS, ['id'], 'SET NULL');
+
+        $migration->archiveTableIfExists(Table::UNSUBSCRIBES);
+        $migration->createTable(Table::UNSUBSCRIBES, [
+            'id' => $migration->primaryKey(),
+            'email' => $migration->string()->notNull(),
+            'userId' => $migration->integer(),
+            'sendId' => $migration->integer(),
+            'dateCreated' => $migration->dateTime()->notNull(),
+            'dateUpdated' => $migration->dateTime()->notNull(),
+            'uid' => $migration->uid(),
+        ]);
+        $migration->createIndex(null, Table::UNSUBSCRIBES, ['email'], true);
+        $migration->createIndex(null, Table::UNSUBSCRIBES, ['userId']);
+        $migration->addForeignKey(null, Table::UNSUBSCRIBES, ['userId'], CraftTable::USERS, ['id'], 'SET NULL');
+        $migration->addForeignKey(null, Table::UNSUBSCRIBES, ['sendId'], Table::SENDS, ['id'], 'SET NULL');
     }
 
     protected function createIndexes(): void

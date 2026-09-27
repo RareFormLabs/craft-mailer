@@ -9,6 +9,7 @@ use Craft;
 use craft\elements\User;
 use craft\mail\Message;
 use rareform\mailer\events\SendEmailEvent;
+use rareform\mailer\mail\CapturingTransport;
 use rareform\mailer\models\ComposeForm;
 use rareform\mailer\models\RecipientData;
 use rareform\mailer\models\Send;
@@ -49,15 +50,22 @@ class Delivery extends Component
 
         try {
             $variables = $renderer->getContext($user, $recipient);
+            $unsubscribeUrl = $this->usesUnsubscribeLinks($recipient, (bool)($send->recipientsConfig['respectUnsubscribes'] ?? true))
+                ? $plugin->getUnsubscribes()->getUrl($recipient->email, $send->id)
+                : null;
+            [$htmlTemplate, $textTemplate] = $this->withUnsubscribeFooter((string)$send->bodyHtml, (string)$send->bodyText, $unsubscribeUrl !== null);
+            $variables['unsubscribeUrl'] = $unsubscribeUrl ?? '';
+
             $message = $this->buildMessage(
                 $send->fromEmail,
                 $send->fromName,
                 $send->replyTo,
                 $this->recipientAddresses($recipient),
                 $renderer->personalize($send->subject, $variables, false, $safeMode),
-                $renderer->personalize((string)$send->bodyHtml, $variables, true, $safeMode),
-                $renderer->personalize((string)$send->bodyText, $variables, false, $safeMode),
+                $renderer->personalize($htmlTemplate, $variables, true, $safeMode),
+                $renderer->personalize($textTemplate, $variables, false, $safeMode),
                 $send->attachments,
+                $unsubscribeUrl,
             );
         } catch (Throwable $e) {
             Craft::error("Mailer couldn’t build the email for {$recipient->email}: {$e->getMessage()}", __METHOD__);
@@ -89,8 +97,13 @@ class Delivery extends Component
 
         $variables = $renderer->getContext($recipientUser, $recipient);
         $content = $form->getBodyContent();
-        $htmlTemplate = Plugin::getInstance()->getImages()->prepareForDisplay($renderer->contentToHtml($content));
-        $textTemplate = $renderer->contentToText($content);
+        // The preview’s unsubscribe link goes nowhere, so clicking it can’t unsubscribe anyone
+        [$htmlTemplate, $textTemplate] = $this->withUnsubscribeFooter(
+            Plugin::getInstance()->getImages()->prepareForDisplay($renderer->contentToHtml($content)),
+            $renderer->contentToText($content),
+            $this->usesUnsubscribeLinks($recipient, $form->respectUnsubscribes),
+        );
+        $variables['unsubscribeUrl'] = $this->usesUnsubscribeLinks($recipient, $form->respectUnsubscribes) ? '#' : '';
         $html = $renderer->personalize($htmlTemplate, $variables, true);
 
         $emptyVariables = array_values(array_filter(
@@ -130,10 +143,18 @@ class Delivery extends Component
             $variables = $renderer->getContext($user, $recipient);
             $content = $form->getBodyContent();
             $attachments = $attachmentsService->store($form, $key);
-            $html = $plugin->getImages()->prepareForEmail(
-                $renderer->contentToHtml($content),
-                $form->embedImages ? Attachments::cidsByAssetId($attachments) : null,
+            $unsubscribeUrl = $this->usesUnsubscribeLinks($recipient, $form->respectUnsubscribes)
+                ? $plugin->getUnsubscribes()->getUrl((string)$user->email)
+                : null;
+            [$html, $text] = $this->withUnsubscribeFooter(
+                $plugin->getImages()->prepareForEmail(
+                    $renderer->contentToHtml($content),
+                    $form->embedImages ? Attachments::cidsByAssetId($attachments) : null,
+                ),
+                $renderer->contentToText($content),
+                $unsubscribeUrl !== null,
             );
+            $variables['unsubscribeUrl'] = $unsubscribeUrl ?? '';
             $message = $this->buildMessage(
                 $form->fromEmail,
                 $form->fromName,
@@ -141,8 +162,9 @@ class Delivery extends Component
                 ['to' => [(string)$user->email => $user->getFullName() ?: null]],
                 Craft::t('mailer', '[Test]') . ' ' . $renderer->personalize($form->subject, $variables, false),
                 $renderer->personalize($html, $variables, true),
-                $renderer->personalize($renderer->contentToText($content), $variables, false),
+                $renderer->personalize($text, $variables, false),
                 $attachments,
+                $unsubscribeUrl,
             );
 
             return $this->deliver($message, $recipient, null, $variables);
@@ -169,6 +191,7 @@ class Delivery extends Component
         string $htmlBody,
         string $textBody,
         array $attachments,
+        ?string $unsubscribeUrl = null,
     ): Message {
         $plugin = Plugin::getInstance();
 
@@ -200,6 +223,12 @@ class Delivery extends Component
 
         $plugin->getAttachments()->attach($message, $attachments);
 
+        if ($unsubscribeUrl !== null) {
+            // One-click unsubscribes (RFC 8058), expected by Gmail and Yahoo for bulk email
+            $message->addHeader('List-Unsubscribe', "<$unsubscribeUrl>");
+            $message->addHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
+        }
+
         return $message;
     }
 
@@ -223,12 +252,13 @@ class Delivery extends Component
         }
 
         $error = null;
+        $transport = $this->captureTransportErrors();
 
         try {
             $success = Craft::$app->getMailer()->send($message);
 
             if (!$success) {
-                $error = Craft::t('mailer', self::TRANSPORT_ERROR);
+                $error = $transport->lastError ?? Craft::t('mailer', self::TRANSPORT_ERROR);
             }
         } catch (Throwable $e) {
             $success = false;
@@ -251,6 +281,68 @@ class Delivery extends Component
             'status' => $success ? RecipientData::STATUS_SENT : RecipientData::STATUS_FAILED,
             'error' => $error,
         ];
+    }
+
+    /**
+     * Returns whether an email to this recipient should include an unsubscribe link.
+     *
+     * Only emails to users get one (not the custom email), and not when unsubscribes are being ignored.
+     */
+    private function usesUnsubscribeLinks(RecipientData $recipient, bool $respectUnsubscribes): bool
+    {
+        return Plugin::getInstance()->getSettings()->unsubscribeLinks && $respectUnsubscribes && !$recipient->getIsCustom();
+    }
+
+    /**
+     * Adds an unsubscribe line to the end of the message, unless it already uses `{{ unsubscribeUrl }}`.
+     *
+     * @return array{0: string, 1: string} The HTML and text templates
+     */
+    private function withUnsubscribeFooter(string $html, string $text, bool $enabled): array
+    {
+        if (!$enabled || preg_match('/\{\{[^}]*\bunsubscribeUrl\b/', $html . $text)) {
+            return [$html, $text];
+        }
+
+        $prompt = Craft::t('mailer', 'Don’t want to receive these emails?');
+        $label = Craft::t('mailer', 'Unsubscribe');
+
+        $html .= sprintf(
+            '<p style="margin: 32px 0 0; font-size: 12px; line-height: 1.5; color: #6b7280;">%s <a href="{{ unsubscribeUrl }}" style="color: #6b7280;">%s</a></p>',
+            htmlspecialchars($prompt, ENT_QUOTES),
+            htmlspecialchars($label, ENT_QUOTES),
+        );
+        $text .= "\n\n----\n$prompt $label: {{ unsubscribeUrl }}";
+
+        return [$html, $text];
+    }
+
+    /**
+     * Wraps the mailer’s transport so rejection reasons can be recorded. Returns `null` if that isn’t possible.
+     */
+    private function captureTransportErrors(): ?CapturingTransport
+    {
+        $mailer = Craft::$app->getMailer();
+
+        if (!$mailer instanceof \yii\symfonymailer\Mailer) {
+            return null;
+        }
+
+        try {
+            // The transport getter is private to the base Symfony mailer class
+            $transport = \Closure::bind(fn() => $this->getTransport(), $mailer, \yii\symfonymailer\Mailer::class)();
+        } catch (Throwable) {
+            return null;
+        }
+
+        if ($transport instanceof CapturingTransport) {
+            return $transport;
+        }
+
+        $capturing = new CapturingTransport($transport);
+        $mailer->setTransport($capturing);
+
+        return $capturing;
     }
 
     /**

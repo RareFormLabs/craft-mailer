@@ -42,6 +42,16 @@ class Settings extends Model
     public int $batchTime = 60;
 
     /**
+     * @var int Pause a send after this many emails fail in a row (e.g. when the mail server is down). `0` disables pausing.
+     */
+    public int $maxConsecutiveFailures = 10;
+
+    /**
+     * @var bool Whether emails to users include an unsubscribe link and one-click unsubscribe headers.
+     */
+    public bool $unsubscribeLinks = true;
+
+    /**
      * @var bool Whether messages are wrapped in the system HTML email template.
      */
     public bool $useEmailTemplate = true;
@@ -79,8 +89,10 @@ class Settings extends Model
             'batchMode' => Craft::t('mailer', 'Batch Mode'),
             'batchMails' => Craft::t('mailer', 'Emails per Batch'),
             'batchTime' => Craft::t('mailer', 'Wait Between Batches'),
+            'maxConsecutiveFailures' => Craft::t('mailer', 'Pause After Failures'),
             'useEmailTemplate' => Craft::t('mailer', 'Use Email Template'),
             'embedImages' => Craft::t('mailer', 'Embed Images'),
+            'unsubscribeLinks' => Craft::t('mailer', 'Unsubscribe Links'),
             'maxAttachmentSize' => Craft::t('mailer', 'Max Attachment Size'),
         ];
     }
@@ -94,9 +106,10 @@ class Settings extends Model
             [['name'], 'trim'],
             [['name'], 'required'],
             [['name'], 'string', 'max' => 50],
-            [['safeMode', 'batchMode', 'useEmailTemplate', 'embedImages'], 'boolean'],
+            [['safeMode', 'batchMode', 'useEmailTemplate', 'embedImages', 'unsubscribeLinks'], 'boolean'],
             [['batchMails'], 'integer', 'min' => 1, 'max' => 10000],
             [['batchTime'], 'integer', 'min' => 1, 'max' => 86400],
+            [['maxConsecutiveFailures'], 'integer', 'min' => 0, 'max' => 10000],
             [['maxAttachmentSize'], 'integer', 'min' => 0],
             [['jobTtr'], 'integer', 'min' => 60],
             [['attachmentsPath'], 'required'],

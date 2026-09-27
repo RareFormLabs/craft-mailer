@@ -20,6 +20,7 @@
 {% block content %}
     {{ actionInput('mailer/compose/send') }}
     {{ hiddenInput('confirmed', '0', {'data-mailer-confirmed': true}) }}
+    {{ hiddenInput('draftId', draftId ?? '', {'data-mailer-draft-id': true}) }}
 
     {% if templateNotice %}
         <p class="notice has-icon">
@@ -63,6 +64,18 @@
 
     {% include 'mailer/_components/preview-dialog' %}
     {% include 'mailer/_components/confirm-dialog' %}
+
+    {% if canManageTemplates %}
+        <pk-dialog label="{{ 'Save as template'|t('mailer') }}" data-mailer-template-dialog>
+            <pk-field label="{{ 'Template name'|t('mailer') }}" for="mailer-template-name" instructions="{{ 'Saves the subject, message and sender. Recipients aren’t included.'|t('mailer') }}">
+                <pk-input id="mailer-template-name" data-mailer-template-name maxlength="255"></pk-input>
+            </pk-field>
+            <div slot="footer" class="mailer-dialog-footer">
+                <pk-button data-mailer-dialog-close>{{ 'Cancel'|t('app') }}</pk-button>
+                <pk-button variant="primary" data-mailer-template-save>{{ 'Save'|t('app') }}</pk-button>
+            </div>
+        </pk-dialog>
+    {% endif %}
 {% endblock %}
 
 {% block details %}

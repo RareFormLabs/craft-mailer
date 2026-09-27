@@ -1,5 +1,6 @@
 /**
- * Plugin Kit components used by Mailer.
+ * Plugin Kit components used across Mailer’s pages. The rich text editor is loaded separately, on the compose
+ * screen only (see compose-entry.ts).
  *
  * Named deep imports with the constructors referenced below, so the element definitions can’t be tree-shaken away.
  */
@@ -17,7 +18,6 @@ import { PkTab } from '@verbb/plugin-kit-web/components/tabs/pk-tab.js';
 import { PkTabPanel } from '@verbb/plugin-kit-web/components/tabs/pk-tab-panel.js';
 import { PkTabs } from '@verbb/plugin-kit-web/components/tabs/pk-tabs.js';
 import { PkTextarea } from '@verbb/plugin-kit-web/components/textarea/pk-textarea.js';
-import { PkTiptapEditor } from '@verbb/plugin-kit-web/components/tiptap/pk-tiptap-editor.js';
 
 export const components = [
     PkButton,
@@ -33,7 +33,7 @@ export const components = [
     PkTabPanel,
     PkTabs,
     PkTextarea,
-    PkTiptapEditor,
 ];
 
-export type { PkDialog, PkInput, PkLightswitch, PkTiptapEditor };
+export type { PkDialog, PkInput, PkLightswitch };
+export type { PkTiptapEditor } from '@verbb/plugin-kit-web/components/tiptap/pk-tiptap-editor.js';

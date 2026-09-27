@@ -6,6 +6,7 @@
 namespace rareform\mailer\models;
 
 use craft\base\Model;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\Json;
 
 /**
@@ -20,6 +21,7 @@ class RecipientData extends Model
     public const SOURCE_GROUP = 'group';
     public const SOURCE_ADMINS = 'admins';
     public const SOURCE_USER = 'user';
+    public const SOURCE_CONDITION = 'condition';
 
     public const STATUS_PENDING = 'pending';
     public const STATUS_SENDING = 'sending';
@@ -76,7 +78,8 @@ class RecipientData extends Model
             'source' => $row['source'],
             'status' => $row['status'],
             'error' => $row['error'],
-            'dateSent' => $row['dateSent'] ?? null,
+            // Database dates are UTC
+            'dateSent' => !empty($row['dateSent']) ? (DateTimeHelper::toDateTime($row['dateSent']) ?: null) : null,
         ]);
     }
 

@@ -1,0 +1,27 @@
+{% if sends|length %}
+    <table class="data fullwidth">
+        <tbody>
+            {% for send in sends %}
+                <tr>
+                    <td>
+                        <a href="{{ send.cpUrl }}">{{ send.subject }}</a>
+                        <div class="smalltext light">
+                            {% if send.status == 'scheduled' and send.scheduledFor %}
+                                {{ 'Scheduled for {date}'|t('mailer', {date: send.scheduledFor|datetime('short')}) }}
+                            {% elseif send.isActive %}
+                                {{ '{done} of {total} sent'|t('mailer', {done: (send.sentCount + send.failedCount)|number, total: (send.totalRecipients - send.skippedCount)|number}) }}
+                            {% else %}
+                                {{ send.dateCreated|timestamp }} · {{ '{num, number} sent'|t('mailer', {num: send.sentCount}) }}{% if send.failedCount %} · {{ '{num, number} failed'|t('mailer', {num: send.failedCount}) }}{% endif %}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="thin nowrap">
+                        <span class="status {{ {green: 'live', orange: 'pending', red: 'expired', blue: 'active', amber: 'pending'}[send.statusColor] ?? 'disabled' }}"></span>{{ send.statusLabel }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p class="zilch small">{{ 'Nothing has been sent yet.'|t('mailer') }}</p>
+{% endif %}

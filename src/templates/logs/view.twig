@@ -24,7 +24,19 @@
                 <button type="submit" class="btn">{{ 'Cancel send'|t('mailer') }}</button>
             </form>
         {% endif %}
-        {% if canManage and isStalled %}
+        {% if canManage and canSend and send.failedCount and not send.isActive %}
+            {% if retryError %}
+                <button type="button" class="btn disabled" disabled title="{{ retryError }}">{{ 'Retry failed'|t('mailer') }}</button>
+            {% else %}
+                <form method="post" data-mailer-confirm="{{ 'Send the message again to the {num} recipients that failed?'|t('mailer', {num: send.failedCount}) }}">
+                    {{ csrfInput() }}
+                    {{ actionInput('mailer/logs/retry') }}
+                    {{ hiddenInput('sendId', send.id) }}
+                    <button type="submit" class="btn">{{ 'Retry failed'|t('mailer') }}</button>
+                </form>
+            {% endif %}
+        {% endif %}
+        {% if canManage and canResume %}
             <form method="post">
                 {{ csrfInput() }}
                 {{ actionInput('mailer/logs/resume') }}
@@ -49,6 +61,18 @@
 {% block content %}
     {% if send.isActive %}
         <div data-mailer-autorefresh="10"></div>
+    {% endif %}
+
+    {% if send.status == 'paused' %}
+        <p class="warning has-icon">
+            <span class="icon" aria-hidden="true"></span>
+            <span>{{ send.statusMessage ?: 'This send is paused.'|t('mailer') }} {{ 'Fix the problem (e.g. check your email settings), then resume it.'|t('mailer') }}</span>
+        </p>
+    {% elseif send.status == 'scheduled' and send.scheduledFor %}
+        <p class="notice has-icon">
+            <span class="icon" aria-hidden="true"></span>
+            <span>{{ 'Scheduled for {date}. The recipients will be worked out again when it starts.'|t('mailer', {date: send.scheduledFor|datetime('short')}) }}</span>
+        </p>
     {% endif %}
 
     {% if isStalled %}
@@ -108,7 +132,7 @@
                                         {% endif %}
                                     </th>
                                     <td data-title="{{ 'Source'|t('mailer') }}">
-                                        {{ {custom: 'Custom'|t('mailer'), group: 'User group'|t('mailer'), admins: 'Admins'|t('mailer'), user: 'User'|t('mailer')}[recipient.source] ?? recipient.source }}
+                                        {{ {custom: 'Custom'|t('mailer'), group: 'User group'|t('mailer'), admins: 'Admins'|t('mailer'), user: 'User'|t('mailer'), condition: 'Conditions'|t('mailer')}[recipient.source] ?? recipient.source }}
                                     </td>
                                     <td data-title="{{ 'Status'|t('mailer') }}">
                                         <span class="mailer-status">
@@ -202,6 +226,12 @@
             <h5 class="heading">{{ 'Created'|t('mailer') }}</h5>
             <div class="value">{{ send.dateCreated ? send.dateCreated|datetime('short') : '–' }}</div>
         </div>
+        {% if send.scheduledFor %}
+            <div class="data">
+                <h5 class="heading">{{ 'Scheduled for'|t('mailer') }}</h5>
+                <div class="value">{{ send.scheduledFor|datetime('short') }}</div>
+            </div>
+        {% endif %}
         <div class="data">
             <h5 class="heading">{{ 'Started'|t('mailer') }}</h5>
             <div class="value">{{ send.dateStarted ? send.dateStarted|datetime('short') : '–' }}</div>

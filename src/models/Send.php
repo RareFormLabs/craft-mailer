@@ -19,8 +19,10 @@ use rareform\mailer\records\SendRecord;
  */
 class Send extends Model
 {
+    public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_QUEUED = 'queued';
     public const STATUS_RUNNING = 'running';
+    public const STATUS_PAUSED = 'paused';
     public const STATUS_FINISHED = 'finished';
     public const STATUS_PARTIAL = 'partial';
     public const STATUS_FAILED = 'failed';
@@ -29,7 +31,7 @@ class Send extends Model
     /**
      * Statuses of sends that are still in progress.
      */
-    public const ACTIVE_STATUSES = [self::STATUS_QUEUED, self::STATUS_RUNNING];
+    public const ACTIVE_STATUSES = [self::STATUS_SCHEDULED, self::STATUS_QUEUED, self::STATUS_RUNNING, self::STATUS_PAUSED];
 
     public ?int $id = null;
 
@@ -72,6 +74,16 @@ class Send extends Model
 
     public int $skippedCount = 0;
 
+    /**
+     * @var DateTime|null When a scheduled send starts.
+     */
+    public ?DateTime $scheduledFor = null;
+
+    /**
+     * @var string|null Why the send is paused or failed, if relevant.
+     */
+    public ?string $statusMessage = null;
+
     public ?DateTime $dateStarted = null;
 
     public ?DateTime $dateFinished = null;
@@ -107,6 +119,8 @@ class Send extends Model
             'sentCount' => (int)$record->sentCount,
             'failedCount' => (int)$record->failedCount,
             'skippedCount' => (int)$record->skippedCount,
+            'scheduledFor' => DateTimeHelper::toDateTime($record->scheduledFor) ?: null,
+            'statusMessage' => $record->statusMessage,
             'dateStarted' => DateTimeHelper::toDateTime($record->dateStarted) ?: null,
             'dateFinished' => DateTimeHelper::toDateTime($record->dateFinished) ?: null,
             'dateCreated' => DateTimeHelper::toDateTime($record->dateCreated) ?: null,
@@ -149,7 +163,9 @@ class Send extends Model
     public function getStatusLabel(): string
     {
         return match ($this->status) {
+            self::STATUS_SCHEDULED => Craft::t('mailer', 'Scheduled'),
             self::STATUS_QUEUED => Craft::t('mailer', 'Queued'),
+            self::STATUS_PAUSED => Craft::t('mailer', 'Paused'),
             self::STATUS_RUNNING => Craft::t('mailer', 'Sending'),
             self::STATUS_FINISHED => Craft::t('mailer', 'Sent'),
             self::STATUS_PARTIAL => Craft::t('mailer', 'Sent with errors'),
@@ -169,7 +185,8 @@ class Send extends Model
             self::STATUS_PARTIAL => 'orange',
             self::STATUS_FAILED => 'red',
             self::STATUS_RUNNING => 'blue',
-            self::STATUS_QUEUED => 'pending',
+            self::STATUS_QUEUED, self::STATUS_SCHEDULED => 'pending',
+            self::STATUS_PAUSED => 'amber',
             default => 'disabled',
         };
     }

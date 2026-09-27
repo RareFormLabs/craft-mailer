@@ -1,8 +1,14 @@
 /**
  * Works around Plugin Kit 2.0.20’s `pk-checkbox` and `pk-lightswitch` only syncing their form value when
  * `value`, `name`, `disabled` or `required` change — not `checked`. Without this, toggling one after the page
- * loads isn’t reflected in the submitted form data.
+ * loads isn’t reflected in the submitted form data. Reported in https://github.com/verbb/plugin-kit/issues/1
  */
+export function syncCheckedFormValues(root: ParentNode = document): void {
+    root.querySelectorAll('pk-checkbox, pk-lightswitch').forEach((element) => {
+        (element as unknown as { syncFormValue?: () => void }).syncFormValue?.();
+    });
+}
+
 export function initCheckedFormValueFix(): void {
     document.addEventListener('change', (event) => {
         const target = event.composedPath()[0] as Element | undefined;

@@ -1,0 +1,74 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Unsubscribes'|t('mailer') %}
+{% set selectedSubnavItem = 'unsubscribes' %}
+
+{% block content %}
+    <p class="light">{{ 'People on this list are skipped when sending to users, unless “Skip people who have unsubscribed” is turned off for a send.'|t('mailer') }}</p>
+
+    <div class="flex flex-nowrap mailer-unsubscribe-tools">
+        <form method="get" class="flex flex-nowrap">
+            <input type="search" class="text" name="search" value="{{ search }}" placeholder="{{ 'Search email addresses'|t('mailer') }}" aria-label="{{ 'Search email addresses'|t('mailer') }}">
+            <button type="submit" class="btn">{{ 'Search'|t('app') }}</button>
+        </form>
+        {% if canManage %}
+            <form method="post" class="flex flex-nowrap">
+                {{ csrfInput() }}
+                {{ actionInput('mailer/unsubscribes/add') }}
+                {{ redirectInput('mailer/unsubscribes') }}
+                <input type="email" class="text" name="email" required placeholder="{{ 'Email address'|t('mailer') }}" aria-label="{{ 'Email address to unsubscribe'|t('mailer') }}">
+                <button type="submit" class="btn">{{ 'Unsubscribe address'|t('mailer') }}</button>
+            </form>
+        {% endif %}
+    </div>
+
+    {% if unsubscribes|length %}
+        <div class="tableview">
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ 'Email'|t('mailer') }}</th>
+                        <th scope="col">{{ 'From email'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Date'|t('mailer') }}</th>
+                        <th scope="col" class="thin"><span class="visually-hidden">{{ 'Actions'|t('app') }}</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in unsubscribes %}
+                        <tr>
+                            <th scope="row">
+                                {% if row.userId %}
+                                    <a href="{{ cpUrl('users/' ~ row.userId) }}">{{ row.email }}</a>
+                                {% else %}
+                                    {{ row.email }}
+                                {% endif %}
+                            </th>
+                            <td>
+                                {% if row.sendId %}
+                                    <a href="{{ cpUrl('mailer/logs/' ~ row.sendId) }}">{{ row.subject }}</a>
+                                {% else %}
+                                    <span class="light">{{ 'Added manually'|t('mailer') }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ row.dateCreated|datetime('short') }}</td>
+                            <td class="thin">
+                                {% if canManage %}
+                                    <form method="post" data-mailer-confirm="{{ 'Resubscribe {email}? They’ll receive emails again.'|t('mailer', {email: row.email}) }}">
+                                        {{ csrfInput() }}
+                                        {{ actionInput('mailer/unsubscribes/remove') }}
+                                        {{ redirectInput('mailer/unsubscribes') }}
+                                        {{ hiddenInput('id', row.id) }}
+                                        <button type="submit" class="btn small">{{ 'Resubscribe'|t('mailer') }}</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'mailer/_components/pagination' with {params: search ? {search: search} : {}} %}
+    {% else %}
+        <div class="zilch"><p>{{ search ? 'No matching addresses.'|t('mailer') : 'Nobody has unsubscribed.'|t('mailer') }}</p></div>
+    {% endif %}
+{% endblock %}

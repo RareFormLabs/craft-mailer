@@ -29,6 +29,8 @@ use rareform\mailer\db\Table;
  * @property int $sentCount
  * @property int $failedCount
  * @property int $skippedCount
+ * @property string|null $scheduledFor
+ * @property string|null $statusMessage
  * @property string|null $dateStarted
  * @property string|null $dateFinished
  * @property string $dateCreated

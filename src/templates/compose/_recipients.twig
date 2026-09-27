@@ -80,6 +80,31 @@
         </div>
     </section>
 
+    {# Users matching conditions #}
+    <section class="mailer-mode" data-mailer-mode="condition">
+        <div class="mailer-mode__header">
+            {{ hiddenInput('modes[condition]', '') }}
+            <pk-lightswitch name="modes[condition]" value="1" {{ form.sendToCondition ? 'checked' }} label="{{ 'Users matching conditions'|t('mailer') }}" data-mailer-mode-toggle="condition"></pk-lightswitch>
+            <p class="light mailer-mode__description">{{ 'Send an email to each user who matches all of these rules, e.g. by group, custom fields or last login.'|t('mailer') }}</p>
+        </div>
+        <div class="mailer-mode__body" data-mailer-mode-body="condition" {{ not form.sendToCondition ? 'hidden' }}>
+            <div class="mailer-condition" data-mailer-condition data-mailer-count-input>
+                {{ userCondition.getBuilderHtml()|raw }}
+            </div>
+            {% if form.getErrors('userCondition') %}
+                <ul class="errors">
+                    {% for error in form.getErrors('userCondition') %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </section>
+
+    <div class="mailer-unsubscribe-option">
+        {{ hiddenInput('respectUnsubscribes', '') }}
+        <pk-lightswitch name="respectUnsubscribes" value="1" {{ form.respectUnsubscribes ? 'checked' }} label="{{ 'Skip people who have unsubscribed'|t('mailer') }}" data-mailer-count-input></pk-lightswitch>
+        <p class="light mailer-mode__description">{{ 'Only turn this off for important notices everyone must receive. Emails sent while it’s off don’t include an unsubscribe link.'|t('mailer') }}</p>
+    </div>
+
     <div class="mailer-summary" data-mailer-summary>
         <div class="mailer-summary__text" data-mailer-summary-text aria-live="polite"></div>
         {% if canExport %}

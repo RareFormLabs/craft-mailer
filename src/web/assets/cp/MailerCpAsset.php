@@ -37,7 +37,22 @@ class MailerCpAsset extends AssetBundle
 
         if ($view instanceof View) {
             $view->registerTranslations('mailer', [
+                'Are you sure?',
                 'Are you sure you want to cancel this send?',
+                'Couldn’t save the draft.',
+                'Couldn’t save the template.',
+                'Delete',
+                'Draft saved at {time}',
+                'Give the template a name.',
+                'It will be sent on {date} at {time}.',
+                'Load',
+                'Replace the current subject and message with this template?',
+                'Schedule',
+                'Schedule “{subject}”?',
+                'That template no longer exists.',
+                'Test email sent.',
+                'The message can’t be previewed.',
+                'The test email couldn’t be sent.',
                 'Are you sure you want to delete all completed logs?',
                 'Are you sure you want to delete this log?',
                 'Cancel',

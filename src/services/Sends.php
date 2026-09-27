@@ -48,7 +48,7 @@ class Sends extends Component
      * @return Send|null The send, or `null` if a plugin prevented it
      * @throws Throwable
      */
-    public function create(ComposeForm $form, array $recipients, User $sender): ?Send
+    public function create(ComposeForm $form, array $recipients, User $sender, ?string $description = null): ?Send
     {
         $plugin = Plugin::getInstance();
         $settings = $plugin->getSettings();
@@ -60,8 +60,9 @@ class Sends extends Component
         $send = new Send([
             'uid' => $uid,
             'senderId' => $sender->id,
-            'status' => Send::STATUS_QUEUED,
-            'description' => $this->describe($form, $summary),
+            'status' => $form->sendAt ? Send::STATUS_SCHEDULED : Send::STATUS_QUEUED,
+            'scheduledFor' => $form->sendAt,
+            'description' => $description ?? $this->describe($form, $summary),
             'fromName' => $form->fromName ?: null,
             'fromEmail' => $form->fromEmail,
             'replyTo' => $form->replyTo ?: null,
@@ -116,6 +117,7 @@ class Sends extends Component
             $record->settingsSnapshot = Json::encode($send->settingsSnapshot);
             $record->totalRecipients = $send->totalRecipients;
             $record->skippedCount = $send->skippedCount;
+            $record->scheduledFor = $send->scheduledFor ? Db::prepareDateForDb($send->scheduledFor) : null;
 
             if (!$record->save(false)) {
                 throw new Exception('Couldn’t save the send.');
@@ -137,7 +139,9 @@ class Sends extends Component
             throw $e;
         }
 
-        if ($summary['sendable'] === 0) {
+        if ($send->scheduledFor) {
+            $this->queue($send->id, max(0, $send->scheduledFor->getTimestamp() - time()));
+        } elseif ($summary['sendable'] === 0) {
             $this->finalize($send->id);
         } else {
             $this->queue($send->id);
@@ -301,14 +305,81 @@ class Sends extends Component
     }
 
     /**
-     * Resumes a stalled send by pushing a new job.
+     * Returns why a send’s failed recipients can’t be retried, or `null` if they can.
+     */
+    public function getRetryError(Send $send): ?string
+    {
+        if ($send->getIsActive()) {
+            return Craft::t('mailer', 'Wait for the send to finish first.');
+        }
+
+        if ($send->failedCount === 0) {
+            return Craft::t('mailer', 'No emails failed.');
+        }
+
+        foreach ($send->attachments as $attachment) {
+            if (($attachment['source'] ?? null) === 'upload') {
+                return Craft::t('mailer', 'This send had uploaded attachments, which aren’t kept. Use it as a template and upload them again instead.');
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates a new send for a send’s failed recipients.
+     *
+     * @throws Throwable
+     */
+    public function retryFailed(Send $send, User $sender): ?Send
+    {
+        if ($error = $this->getRetryError($send)) {
+            throw new Exception($error);
+        }
+
+        $recipients = array_map(function(array $row) {
+            $recipient = RecipientData::fromRow($row);
+            $recipient->id = null;
+            $recipient->status = RecipientData::STATUS_PENDING;
+            $recipient->error = null;
+            $recipient->dateSent = null;
+
+            return $recipient;
+        }, $this->createRecipientQuery($send->id, RecipientData::STATUS_FAILED)->all());
+
+        $form = ComposeForm::fromSend($send);
+        $form->sendAt = null;
+
+        return $this->create($form, $recipients, $sender, Craft::t('mailer', 'Retry of failed emails from “{subject}” (#{id})', [
+            'subject' => mb_substr($send->subject, 0, 120),
+            'id' => $send->id,
+        ]));
+    }
+
+    /**
+     * Pauses a send. It stays paused until it’s resumed.
+     */
+    public function pause(int $sendId, ?string $message = null): bool
+    {
+        return (bool)Db::update(Table::SENDS, [
+            'status' => Send::STATUS_PAUSED,
+            'statusMessage' => $message !== null ? mb_substr($message, 0, 255) : null,
+        ], ['id' => $sendId, 'status' => [Send::STATUS_QUEUED, Send::STATUS_RUNNING]]);
+    }
+
+    /**
+     * Resumes a paused or stalled send by pushing a new job.
      */
     public function resume(int $sendId): bool
     {
         $send = $this->getSendById($sendId);
 
-        if (!$send || !$this->isStalled($send)) {
+        if (!$send || !$this->canResume($send)) {
             return false;
+        }
+
+        if ($send->status === Send::STATUS_PAUSED) {
+            Db::update(Table::SENDS, ['status' => Send::STATUS_RUNNING, 'statusMessage' => null], ['id' => $sendId]);
         }
 
         $this->queue($sendId);
@@ -317,12 +388,56 @@ class Sends extends Component
     }
 
     /**
+     * Returns whether a send can be resumed.
+     */
+    public function canResume(Send $send): bool
+    {
+        return $send->status === Send::STATUS_PAUSED || $this->isStalled($send);
+    }
+
+    /**
+     * Works out a scheduled send’s recipients again from its recipient settings.
+     */
+    public function refreshRecipients(Send $send): void
+    {
+        $plugin = Plugin::getInstance();
+        $recipients = $plugin->getRecipients()->resolve(ComposeForm::fromSend($send));
+        $db = Craft::$app->getDb();
+        $transaction = $db->beginTransaction();
+
+        try {
+            Db::delete(Table::RECIPIENTS, ['sendId' => $send->id, 'status' => [RecipientData::STATUS_PENDING, RecipientData::STATUS_SKIPPED]]);
+
+            foreach (array_chunk($recipients, 500) as $chunk) {
+                Db::batchInsert(Table::RECIPIENTS, array_keys($chunk[0]->toRow($send->id)), array_map(
+                    fn(RecipientData $recipient) => array_values($recipient->toRow($send->id)),
+                    $chunk,
+                ));
+            }
+
+            $transaction->commit();
+        } catch (Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+
+        $this->recount($send->id);
+    }
+
+    /**
      * Returns whether an active send has stopped progressing (e.g. its job failed or was released).
      */
     public function isStalled(Send $send): bool
     {
-        if (!$send->getIsActive() || !$send->dateUpdated) {
+        if (!in_array($send->status, [Send::STATUS_QUEUED, Send::STATUS_RUNNING, Send::STATUS_SCHEDULED], true) || !$send->dateUpdated) {
             return false;
+        }
+
+        if ($send->status === Send::STATUS_SCHEDULED) {
+            // Not stalled until well after it was due to start
+            return $send->scheduledFor
+                && time() - $send->scheduledFor->getTimestamp() > Plugin::getInstance()->getSettings()->jobTtr + 300
+                && !$this->hasQueuedJob($send->id);
         }
 
         $snapshot = $send->settingsSnapshot;
@@ -434,6 +549,10 @@ class Sends extends Component
 
         if ($form->sendToUsers) {
             $parts[] = Craft::t('mailer', '{num, number} {num, plural, =1{user} other{users}}', ['num' => count($form->userIds)]);
+        }
+
+        if ($form->sendToCondition) {
+            $parts[] = Craft::t('mailer', 'Users matching conditions');
         }
 
         return implode(' · ', $parts);

@@ -10,6 +10,7 @@ use craft\elements\User;
 use rareform\mailer\events\DefineRecipientsEvent;
 use rareform\mailer\models\ComposeForm;
 use rareform\mailer\models\RecipientData;
+use rareform\mailer\Plugin;
 use yii\base\Component;
 
 /**
@@ -89,6 +90,27 @@ class Recipients extends Component
             $recipients[] = $recipient;
         }
 
+        if ($form->respectUnsubscribes) {
+            $emails = [];
+
+            foreach ($recipients as $recipient) {
+                if (!$recipient->getIsCustom() && $recipient->status !== RecipientData::STATUS_SKIPPED) {
+                    $emails[] = $recipient->email;
+                }
+            }
+
+            $unsubscribed = Plugin::getInstance()->getUnsubscribes()->getUnsubscribed($emails);
+
+            if ($unsubscribed) {
+                foreach ($recipients as $recipient) {
+                    if (!$recipient->getIsCustom() && $recipient->status !== RecipientData::STATUS_SKIPPED && isset($unsubscribed[strtolower($recipient->email)])) {
+                        $recipient->status = RecipientData::STATUS_SKIPPED;
+                        $recipient->error = Craft::t('mailer', 'Unsubscribed');
+                    }
+                }
+            }
+        }
+
         $event = new DefineRecipientsEvent([
             'form' => $form,
             'recipients' => $recipients,
@@ -143,7 +165,7 @@ class Recipients extends Component
     /**
      * Returns the selected users along with how they were selected.
      *
-     * Individually selected users take precedence over user groups, which take precedence over the admins group.
+     * Individually selected users take precedence over user groups, then the admins group, then conditions.
      *
      * @return \Generator<array{0: User, 1: string}>
      */
@@ -170,6 +192,15 @@ class Recipients extends Component
                 foreach ($this->userQuery()->admin(true)->ids() as $id) {
                     $sources[(int)$id] ??= RecipientData::SOURCE_ADMINS;
                 }
+            }
+        }
+
+        if ($form->sendToCondition && ($condition = $form->getUserCondition()) && $condition->getConditionRules()) {
+            $query = $this->userQuery();
+            $condition->modifyQuery($query);
+
+            foreach ($query->ids() as $id) {
+                $sources[(int)$id] ??= RecipientData::SOURCE_CONDITION;
             }
         }
 

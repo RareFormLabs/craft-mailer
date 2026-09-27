@@ -7,8 +7,10 @@ namespace rareform\mailer;
 
 use Craft;
 use craft\base\Model;
+use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterUserPermissionsEvent;
+use craft\services\Dashboard;
 use craft\services\Gc;
 use craft\services\UserPermissions;
 use craft\web\UrlManager;
@@ -18,8 +20,11 @@ use rareform\mailer\services\Delivery;
 use rareform\mailer\services\Images;
 use rareform\mailer\services\Recipients;
 use rareform\mailer\services\Renderer;
+use rareform\mailer\services\Saved;
 use rareform\mailer\services\Sends;
+use rareform\mailer\services\Unsubscribes;
 use rareform\mailer\web\assets\cp\MailerCpAsset;
+use rareform\mailer\widgets\RecentSends;
 use yii\base\Event;
 
 /**
@@ -30,7 +35,9 @@ use yii\base\Event;
  * @property-read Images $images
  * @property-read Recipients $recipients
  * @property-read Renderer $renderer
+ * @property-read Saved $saved
  * @property-read Sends $sends
+ * @property-read Unsubscribes $unsubscribes
  * @method Settings getSettings()
  */
 class Plugin extends \craft\base\Plugin
@@ -38,13 +45,14 @@ class Plugin extends \craft\base\Plugin
     public const PERMISSION_SEND = 'mailer-send';
     public const PERMISSION_CHANGE_SENDER = 'mailer-changeSender';
     public const PERMISSION_EXPORT = 'mailer-exportUsers';
+    public const PERMISSION_MANAGE_TEMPLATES = 'mailer-manageTemplates';
     public const PERMISSION_VIEW_LOGS = 'mailer-viewLogs';
     public const PERMISSION_MANAGE_LOGS = 'mailer-manageLogs';
 
     /**
      * @inheritdoc
      */
-    public string $schemaVersion = '1.0.0';
+    public string $schemaVersion = '1.1.0';
 
     /**
      * @inheritdoc
@@ -68,7 +76,9 @@ class Plugin extends \craft\base\Plugin
                 'images' => Images::class,
                 'recipients' => Recipients::class,
                 'renderer' => Renderer::class,
+                'saved' => Saved::class,
                 'sends' => Sends::class,
+                'unsubscribes' => Unsubscribes::class,
             ],
         ];
     }
@@ -87,6 +97,10 @@ class Plugin extends \craft\base\Plugin
         });
 
         $this->registerPermissions();
+
+        Event::on(Dashboard::class, Dashboard::EVENT_REGISTER_WIDGET_TYPES, function(RegisterComponentTypesEvent $event) {
+            $event->types[] = RecentSends::class;
+        });
 
         if (Craft::$app->getRequest()->getIsCpRequest()) {
             $this->registerCpRoutes();
@@ -118,9 +132,19 @@ class Plugin extends \craft\base\Plugin
         return $this->get('renderer');
     }
 
+    public function getSaved(): Saved
+    {
+        return $this->get('saved');
+    }
+
     public function getSends(): Sends
     {
         return $this->get('sends');
+    }
+
+    public function getUnsubscribes(): Unsubscribes
+    {
+        return $this->get('unsubscribes');
     }
 
     /**
@@ -143,10 +167,13 @@ class Plugin extends \craft\base\Plugin
 
         if ($canSend) {
             $item['subnav']['compose'] = ['label' => Craft::t('mailer', 'Compose'), 'url' => 'mailer'];
+            $item['subnav']['drafts'] = ['label' => Craft::t('mailer', 'Drafts'), 'url' => 'mailer/drafts'];
+            $item['subnav']['templates'] = ['label' => Craft::t('mailer', 'Templates'), 'url' => 'mailer/templates'];
         }
 
         if ($canViewLogs) {
             $item['subnav']['logs'] = ['label' => Craft::t('mailer', 'Logs'), 'url' => 'mailer/logs'];
+            $item['subnav']['unsubscribes'] = ['label' => Craft::t('mailer', 'Unsubscribes'), 'url' => 'mailer/unsubscribes'];
         }
 
         return $item;
@@ -179,6 +206,9 @@ class Plugin extends \craft\base\Plugin
             $event->rules['mailer'] = 'mailer/compose/index';
             $event->rules['mailer/logs'] = 'mailer/logs/index';
             $event->rules['mailer/logs/<sendId:\d+>'] = 'mailer/logs/view';
+            $event->rules['mailer/drafts'] = 'mailer/saved/drafts';
+            $event->rules['mailer/templates'] = 'mailer/saved/templates';
+            $event->rules['mailer/unsubscribes'] = 'mailer/unsubscribes/index';
         });
     }
 
@@ -198,13 +228,16 @@ class Plugin extends \craft\base\Plugin
                             self::PERMISSION_EXPORT => [
                                 'label' => Craft::t('mailer', 'Export selected users as CSV'),
                             ],
+                            self::PERMISSION_MANAGE_TEMPLATES => [
+                                'label' => Craft::t('mailer', 'Save and delete templates'),
+                            ],
                         ],
                     ],
                     self::PERMISSION_VIEW_LOGS => [
                         'label' => Craft::t('mailer', 'View logs'),
                         'nested' => [
                             self::PERMISSION_MANAGE_LOGS => [
-                                'label' => Craft::t('mailer', 'Cancel, resume and delete sends'),
+                                'label' => Craft::t('mailer', 'Cancel, resume, retry and delete sends, and manage unsubscribes'),
                             ],
                         ],
                     ],

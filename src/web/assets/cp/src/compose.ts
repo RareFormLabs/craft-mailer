@@ -1,5 +1,7 @@
 import type { PkDialog, PkInput, PkLightswitch, PkTiptapEditor } from './components';
 import { errorMessage, notifyError, notifySuccess, postAction, t } from './craft';
+import { confirmDialog as confirmAction } from './dialogs';
+import { syncCheckedFormValues } from './form-fixes';
 
 type Summary = {
     total: number;
@@ -141,10 +143,12 @@ export function initCompose(form: HTMLFormElement): void {
     });
 
     // Craft’s element select fields don’t dispatch DOM events, so watch their selected elements instead.
-    const userSelect = form.querySelector('#mailer-users');
+    for (const selector of ['#mailer-users', '[data-mailer-condition]']) {
+        const container = form.querySelector(selector);
 
-    if (userSelect) {
-        new MutationObserver(scheduleCount).observe(userSelect, { childList: true, subtree: true });
+        if (container) {
+            new MutationObserver(scheduleCount).observe(container, { childList: true, subtree: true });
+        }
     }
 
     updateCount();
@@ -166,7 +170,7 @@ export function initCompose(form: HTMLFormElement): void {
         }
 
         summary = result;
-        renderConfirm(confirmDialog, result, subject?.value ?? '');
+        renderConfirm(confirmDialog, result, subject?.value ?? '', scheduledFor(form));
         await confirmDialog.show();
     };
 
@@ -201,6 +205,7 @@ export function initCompose(form: HTMLFormElement): void {
         confirmDialog.querySelector('[data-mailer-confirm-submit]')?.setAttribute('loading', '');
         form.querySelector('[data-mailer-send]')?.classList.add('loading');
         // Native submit: skips the submit event (and our interception) and includes the form-associated elements.
+        syncCheckedFormValues(form);
         form.submit();
     });
 
@@ -232,6 +237,140 @@ export function initCompose(form: HTMLFormElement): void {
             notifySuccess(response.data?.message ?? t('Test email sent.'));
         } catch (error) {
             notifyError(errorMessage(error, t('The test email couldn’t be sent.')));
+        } finally {
+            button.removeAttribute('loading');
+        }
+    });
+
+    // ---------------------------------------------------------------------
+    // Drafts
+    // ---------------------------------------------------------------------
+
+    const draftInput = form.querySelector<HTMLInputElement>('[data-mailer-draft-id]');
+    const draftStatus = form.querySelector<HTMLElement>('[data-mailer-draft-status]');
+    let draftDirty = false;
+    let draftSaving = false;
+    let draftTimer: number | undefined;
+
+    const hasContent = () => Boolean(subject?.value?.trim()) || Boolean(editor?.editor && !editor.editor.isEmpty);
+
+    const saveDraft = async () => {
+        if (!draftDirty || draftSaving || submitting || !hasContent()) {
+            return;
+        }
+
+        draftSaving = true;
+        draftDirty = false;
+
+        try {
+            const data = formData(form, false);
+            const response = await postAction('mailer/saved/save-draft', data);
+            const { draftId, savedAt } = response.data as { draftId: number; savedAt: string };
+
+            if (draftInput) {
+                draftInput.value = String(draftId);
+            }
+
+            if (draftStatus) {
+                draftStatus.textContent = t('Draft saved at {time}', { time: savedAt });
+            }
+
+            const url = new URL(window.location.href);
+
+            if (url.searchParams.get('draft') !== String(draftId)) {
+                url.searchParams.delete('template');
+                url.searchParams.set('draft', String(draftId));
+                window.history.replaceState(null, '', url);
+            }
+        } catch {
+            draftDirty = true;
+
+            if (draftStatus) {
+                draftStatus.textContent = t('Couldn’t save the draft.');
+            }
+        } finally {
+            draftSaving = false;
+        }
+    };
+
+    const markDirty = () => {
+        if (submitting) {
+            return;
+        }
+
+        draftDirty = true;
+        window.clearTimeout(draftTimer);
+        draftTimer = window.setTimeout(saveDraft, 3000);
+    };
+
+    form.addEventListener('input', markDirty);
+    form.addEventListener('change', markDirty);
+
+    for (const selector of ['#mailer-users', '#mailer-assets', '[data-mailer-condition]']) {
+        const container = form.querySelector(selector);
+
+        if (container) {
+            new MutationObserver(markDirty).observe(container, { childList: true, subtree: true });
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Templates
+    // ---------------------------------------------------------------------
+
+    form.querySelector('[data-mailer-templates-menu]')?.addEventListener('pk-select', async (event) => {
+        const id = (event as CustomEvent).detail?.value;
+
+        if (!id) {
+            return;
+        }
+
+        if (hasContent() && !(await confirmAction(t('Replace the current subject and message with this template?'), t('Load')))) {
+            return;
+        }
+
+        try {
+            const data = new FormData();
+            data.set('id', String(id));
+            const response = await postAction('mailer/saved/template-data', data);
+            applyTemplate(form, editor, response.data);
+            markDirty();
+        } catch (error) {
+            notifyError(errorMessage(error, t('That template no longer exists.')));
+        }
+    });
+
+    const templateDialog = document.querySelector<PkDialog>('[data-mailer-template-dialog]');
+    const templateName = templateDialog?.querySelector<PkInput>('[data-mailer-template-name]');
+
+    form.querySelector('[data-mailer-save-template]')?.addEventListener('click', async () => {
+        if (templateName) {
+            templateName.value = subject?.value ?? '';
+        }
+
+        await templateDialog?.show();
+        templateName?.focus();
+    });
+
+    templateDialog?.querySelector('[data-mailer-template-save]')?.addEventListener('click', async (event) => {
+        const button = event.currentTarget as HTMLElement;
+        const name = templateName?.value?.trim() ?? '';
+
+        if (!name) {
+            notifyError(t('Give the template a name.'));
+            return;
+        }
+
+        button.setAttribute('loading', '');
+
+        try {
+            const data = formData(form, false);
+            data.set('templateName', name);
+            const response = await postAction('mailer/saved/save-template', data);
+            notifySuccess(response.data?.message ?? name);
+            await templateDialog.hide();
+        } catch (error) {
+            notifyError(errorMessage(error, t('Couldn’t save the template.')));
         } finally {
             button.removeAttribute('loading');
         }
@@ -273,6 +412,7 @@ export function initCompose(form: HTMLFormElement): void {
  * Builds the form data for an async request.
  */
 function formData(form: HTMLFormElement, includeUploads: boolean): FormData {
+    syncCheckedFormValues(form);
     const data = new FormData(form);
     data.delete('action');
     data.delete('confirmed');
@@ -282,6 +422,46 @@ function formData(form: HTMLFormElement, includeUploads: boolean): FormData {
     }
 
     return data;
+}
+
+type TemplateData = {
+    subject?: string;
+    bodyJson?: string;
+    fromName?: string;
+    fromEmail?: string;
+    replyTo?: string;
+    embedImages?: boolean;
+};
+
+function applyTemplate(form: HTMLFormElement, editor: PkTiptapEditor | null, data: TemplateData): void {
+    const setInput = (selector: string, value: string | undefined) => {
+        const input = form.querySelector<PkInput>(selector);
+
+        if (input && value !== undefined && !input.readonly) {
+            input.value = value;
+            input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+        }
+    };
+
+    setInput('[data-mailer-subject]', data.subject);
+    setInput('#mailer-fromName', data.fromName);
+    setInput('#mailer-fromEmail', data.fromEmail);
+    setInput('#mailer-replyTo', data.replyTo);
+
+    if (editor?.editor && data.bodyJson !== undefined) {
+        try {
+            editor.editor.commands.setContent({ type: 'doc', content: JSON.parse(data.bodyJson || '[]') }, { emitUpdate: true });
+        } catch {
+            // Invalid JSON; leave the message as is
+        }
+    }
+
+    const embed = form.querySelector<PkLightswitch>('pk-lightswitch[name="embedImages"]');
+
+    if (embed && data.embedImages !== undefined && embed.checked !== data.embedImages) {
+        embed.checked = data.embedImages;
+        (embed as unknown as { syncFormValue?: () => void }).syncFormValue?.();
+    }
 }
 
 function insertIntoInput(input: PkInput, text: string): void {
@@ -326,7 +506,14 @@ function renderSummary(summary: Summary, text: HTMLElement | null, badge: HTMLEl
     text.title = Object.entries(summary.reasons).map(([reason, count]) => `${reason}: ${count}`).join('\n');
 }
 
-function renderConfirm(dialog: PkDialog, summary: Summary, subject: string): void {
+function scheduledFor(form: HTMLFormElement): { date: string; time: string } | null {
+    const date = form.querySelector<HTMLInputElement>('input[name="sendAt[date]"]')?.value.trim() ?? '';
+    const time = form.querySelector<HTMLInputElement>('input[name="sendAt[time]"]')?.value.trim() ?? '';
+
+    return date ? { date, time } : null;
+}
+
+function renderConfirm(dialog: PkDialog, summary: Summary, subject: string, schedule: { date: string; time: string } | null): void {
     const title = dialog.querySelector<HTMLElement>('[data-mailer-confirm-title]');
     const message = dialog.querySelector<HTMLElement>('[data-mailer-confirm-message]');
     const breakdown = dialog.querySelector<HTMLElement>('[data-mailer-confirm-breakdown]');
@@ -335,13 +522,20 @@ function renderConfirm(dialog: PkDialog, summary: Summary, subject: string): voi
     const submit = dialog.querySelector<HTMLElement>('[data-mailer-confirm-submit]');
 
     if (title) {
-        title.textContent = t('Send “{subject}”?', { subject: subject || '…' });
+        title.textContent = schedule
+            ? t('Schedule “{subject}”?', { subject: subject || '…' })
+            : t('Send “{subject}”?', { subject: subject || '…' });
     }
 
     if (message) {
         message.textContent = summary.sendable === 0
             ? t('No recipients selected')
-            : t('Send the message to {num} {num, plural, =1{email address} other{email addresses}}?', { num: summary.emails });
+            : t('Send the message to {num} {num, plural, =1{email address} other{email addresses}}?', { num: summary.emails })
+                + (schedule ? ' ' + t('It will be sent on {date} at {time}.', { date: schedule.date, time: schedule.time || '12:00' }) : '');
+    }
+
+    if (submit) {
+        submit.textContent = schedule ? t('Schedule') : t('Send');
     }
 
     if (breakdown) {

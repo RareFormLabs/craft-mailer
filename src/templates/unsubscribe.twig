@@ -1,0 +1,36 @@
+{#- Public unsubscribe page. Standalone so it works on any site without depending on its templates. -#}
+<!DOCTYPE html>
+<html lang="{{ craft.app.language }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>{{ 'Unsubscribe'|t('mailer') }} – {{ siteName }}</title>
+    <style>
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f3f4f6; color: #1f2937; font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+        main { max-width: 440px; margin: 24px; padding: 32px; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, .1); }
+        h1 { margin: 0 0 12px; font-size: 22px; }
+        p { margin: 0 0 20px; color: #4b5563; }
+        button { padding: 10px 18px; border: 0; border-radius: 6px; background: #1f2937; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+        button:hover { background: #111827; }
+    </style>
+</head>
+<body>
+<main>
+    {% if state == 'confirm' %}
+        <h1>{{ 'Unsubscribe from emails?'|t('mailer') }}</h1>
+        <p>{{ '{email} will no longer receive emails like this from {site}.'|t('mailer', {email: email, site: siteName}) }}</p>
+        <form method="post">
+            <input type="hidden" name="code" value="{{ token }}">
+            <button type="submit">{{ 'Unsubscribe'|t('mailer') }}</button>
+        </form>
+    {% elseif state == 'done' %}
+        <h1>{{ 'You’re unsubscribed'|t('mailer') }}</h1>
+        <p>{{ '{email} won’t receive emails like this from {site} any more.'|t('mailer', {email: email, site: siteName}) }}</p>
+    {% else %}
+        <h1>{{ 'This link isn’t valid'|t('mailer') }}</h1>
+        <p>{{ 'The unsubscribe link may be incomplete. Try copying the whole link from the email.'|t('mailer') }}</p>
+    {% endif %}
+</main>
+</body>
+</html>

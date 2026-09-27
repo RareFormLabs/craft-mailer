@@ -1,0 +1,46 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Templates'|t('mailer') %}
+{% set selectedSubnavItem = 'templates' %}
+
+{% block content %}
+    <p class="light">{{ 'Templates store a subject, message and sender for reuse. Save one from the compose screen, then load it from the Templates menu there.'|t('mailer') }}</p>
+
+    {% if templates|length %}
+        <div class="tableview">
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ 'Name'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Created by'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Last saved'|t('mailer') }}</th>
+                        <th scope="col" class="thin"><span class="visually-hidden">{{ 'Actions'|t('app') }}</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                        {% set creator = template.creatorId ? craft.users.id(template.creatorId).status(null).one() : null %}
+                        <tr>
+                            <th scope="row">{{ template.name }}</th>
+                            <td>{{ creator ? creator.friendlyName : '–' }}</td>
+                            <td>{{ template.dateUpdated|datetime('short') }}</td>
+                            <td class="thin">
+                                {% if canManage %}
+                                    <form method="post" data-mailer-confirm="{{ 'Are you sure you want to delete this template?'|t('mailer') }}">
+                                        {{ csrfInput() }}
+                                        {{ actionInput('mailer/saved/delete-template') }}
+                                        {{ redirectInput('mailer/templates') }}
+                                        {{ hiddenInput('id', template.id) }}
+                                        <button type="submit" class="btn small">{{ 'Delete'|t('app') }}</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="zilch"><p>{{ 'No templates yet.'|t('mailer') }}</p></div>
+    {% endif %}
+{% endblock %}

@@ -35,6 +35,11 @@ class SendBatchJob extends BaseJob
     public int $sentInBatch = 0;
 
     /**
+     * @var int The number of emails that have failed in a row (carried over between jobs).
+     */
+    public int $consecutiveFailures = 0;
+
+    /**
      * Returns the string included in job descriptions to identify a send’s job.
      */
     public static function descriptionMarker(int $sendId): string
@@ -58,6 +63,18 @@ class SendBatchJob extends BaseJob
             return;
         }
 
+        // Paused sends wait to be resumed, which queues a new job
+        if ($send->status === Send::STATUS_PAUSED) {
+            return;
+        }
+
+        // Scheduled sends work out their recipients again, so they reflect who should get the email now
+        if ($send->status === Send::STATUS_SCHEDULED) {
+            $sends->refreshRecipients($send);
+            Db::update(Table::SENDS, ['status' => Send::STATUS_QUEUED], ['id' => $send->id, 'status' => Send::STATUS_SCHEDULED]);
+            $send = $sends->getSendById($send->id);
+        }
+
         if ($send->status === Send::STATUS_QUEUED) {
             Db::update(Table::SENDS, [
                 'status' => Send::STATUS_RUNNING,
@@ -73,6 +90,7 @@ class SendBatchJob extends BaseJob
 
         $plugin->getRenderer()->reset();
         $settings = $plugin->getSettings();
+        $maxFailures = $settings->maxConsecutiveFailures;
         $snapshot = $send->settingsSnapshot;
         $batchMode = (bool)($snapshot['batchMode'] ?? $settings->batchMode);
         $batchMails = max(1, (int)($snapshot['batchMails'] ?? $settings->batchMails));
@@ -122,6 +140,21 @@ class SendBatchJob extends BaseJob
                 $this->sentInBatch++;
                 $done++;
 
+                if ($result['status'] === RecipientData::STATUS_FAILED) {
+                    $this->consecutiveFailures++;
+                } elseif ($result['status'] === RecipientData::STATUS_SENT) {
+                    $this->consecutiveFailures = 0;
+                }
+
+                if ($maxFailures > 0 && $this->consecutiveFailures >= $maxFailures) {
+                    $sends->recount($send->id);
+                    $sends->pause($send->id, Craft::t('mailer', 'Paused after {num} emails failed in a row. Last error: {error}', [
+                        'num' => $this->consecutiveFailures,
+                        'error' => $result['error'] ?? '–',
+                    ]));
+                    return;
+                }
+
                 $this->setProgress($queue, min(1, $done / $sendable), Craft::t('mailer', '{done, number} of {total, number}', [
                     'done' => $done,
                     'total' => $sendable,
@@ -145,10 +178,13 @@ class SendBatchJob extends BaseJob
         Db::update(Table::SENDS, [], ['id' => $send->id]);
 
         if ($batchMode && $quota <= 0) {
-            $sends->queue($send->id, $batchTime);
+            $sends->queue($send->id, $batchTime, ['consecutiveFailures' => $this->consecutiveFailures]);
         } else {
             // Ran out of time; continue the current batch right away
-            $sends->queue($send->id, 0, ['sentInBatch' => $batchMode ? $this->sentInBatch : 0]);
+            $sends->queue($send->id, 0, [
+                'sentInBatch' => $batchMode ? $this->sentInBatch : 0,
+                'consecutiveFailures' => $this->consecutiveFailures,
+            ]);
         }
     }
 

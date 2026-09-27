@@ -42,7 +42,12 @@
                                 <a href="{{ send.cpUrl }}">{{ send.subject }}</a>
                                 {% if send.description %}<div class="smalltext light">{{ send.description }}</div>{% endif %}
                             </th>
-                            <td data-title="{{ 'Status'|t('mailer') }}">{% include 'mailer/_components/status' %}</td>
+                            <td data-title="{{ 'Status'|t('mailer') }}">
+                                {% include 'mailer/_components/status' %}
+                                {% if send.status == 'scheduled' and send.scheduledFor %}
+                                    <div class="smalltext light">{{ send.scheduledFor|datetime('short') }}</div>
+                                {% endif %}
+                            </td>
                             <td data-title="{{ 'Recipients'|t('mailer') }}">{{ send.totalRecipients|number }}</td>
                             <td data-title="{{ 'Sent'|t('mailer') }}">{{ send.sentCount|number }}</td>
                             <td data-title="{{ 'Failed'|t('mailer') }}">{{ send.failedCount ? send.failedCount|number : '–' }}</td>

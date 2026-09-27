@@ -1,0 +1,45 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Drafts'|t('mailer') %}
+{% set selectedSubnavItem = 'drafts' %}
+
+{% block actionButton %}
+    <a class="btn submit add icon" href="{{ cpUrl('mailer') }}">{{ 'Compose'|t('mailer') }}</a>
+{% endblock %}
+
+{% block content %}
+    <p class="light">{{ 'Messages are saved here automatically while you compose. Drafts are only visible to you.'|t('mailer') }}</p>
+
+    {% if drafts|length %}
+        <div class="tableview">
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ 'Subject'|t('mailer') }}</th>
+                        <th scope="col">{{ 'Last saved'|t('mailer') }}</th>
+                        <th scope="col" class="thin"><span class="visually-hidden">{{ 'Actions'|t('app') }}</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for draft in drafts %}
+                        <tr>
+                            <th scope="row"><a href="{{ cpUrl('mailer', {draft: draft.id}) }}">{{ draft.name ?: 'Untitled'|t('mailer') }}</a></th>
+                            <td>{{ draft.dateUpdated|datetime('short') }}</td>
+                            <td class="thin">
+                                <form method="post" data-mailer-confirm="{{ 'Are you sure you want to delete this draft?'|t('mailer') }}">
+                                    {{ csrfInput() }}
+                                    {{ actionInput('mailer/saved/delete-draft') }}
+                                    {{ redirectInput('mailer/drafts') }}
+                                    {{ hiddenInput('id', draft.id) }}
+                                    <button type="submit" class="btn small">{{ 'Delete'|t('app') }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="zilch"><p>{{ 'No drafts.'|t('mailer') }}</p></div>
+    {% endif %}
+{% endblock %}

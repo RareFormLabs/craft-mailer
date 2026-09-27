@@ -7,7 +7,11 @@ namespace rareform\mailer\models;
 
 use Craft;
 use craft\base\Model;
+use craft\elements\conditions\users\UserCondition;
+use craft\elements\User;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\Json;
+use DateTime;
 use rareform\mailer\helpers\AddressParser;
 use verbb\tiptap\Normalizer;
 use yii\web\UploadedFile;
@@ -41,6 +45,11 @@ class ComposeForm extends Model
     public string $replyTo = '';
 
     /**
+     * @var DateTime|null When to send, or `null` to send right away.
+     */
+    public ?DateTime $sendAt = null;
+
+    /**
      * @var bool Whether images in the body are embedded in each email instead of linked.
      */
     public bool $embedImages = false;
@@ -67,6 +76,18 @@ class ComposeForm extends Model
      */
     public array $userIds = [];
 
+    public bool $sendToCondition = false;
+
+    /**
+     * @var bool Whether people who have unsubscribed are skipped. Turn off for important notices.
+     */
+    public bool $respectUnsubscribes = true;
+
+    /**
+     * @var array The user condition builder’s config.
+     */
+    public array $userConditionConfig = [];
+
     /**
      * @var int[]
      */
@@ -76,6 +97,11 @@ class ComposeForm extends Model
      * @var UploadedFile[]
      */
     public array $uploads = [];
+
+    /**
+     * @var UserCondition|false|null
+     */
+    private UserCondition|false|null $_userCondition = null;
 
     /**
      * @var array|null Parsed custom addresses, memoized.
@@ -97,6 +123,7 @@ class ComposeForm extends Model
             'fromEmail' => trim((string)$request->getBodyParam('fromEmail', '')),
             'replyTo' => trim((string)$request->getBodyParam('replyTo', '')),
             'embedImages' => (bool)$request->getBodyParam('embedImages', false),
+            'sendAt' => DateTimeHelper::toDateTime($request->getBodyParam('sendAt'), true) ?: null,
             'sendToCustom' => !empty($modes['custom']),
             'customTo' => (string)$request->getBodyParam('customTo', ''),
             'customCc' => (string)$request->getBodyParam('customCc', ''),
@@ -105,6 +132,9 @@ class ComposeForm extends Model
             'groupIds' => array_values(array_filter((array)$request->getBodyParam('groupIds', []), fn($id) => $id !== '' && $id !== null)),
             'sendToUsers' => !empty($modes['users']),
             'userIds' => self::ids($request->getBodyParam('userIds', [])),
+            'sendToCondition' => !empty($modes['condition']),
+            'respectUnsubscribes' => (bool)$request->getBodyParam('respectUnsubscribes', true),
+            'userConditionConfig' => (array)$request->getBodyParam('userCondition', []),
             'assetIds' => self::ids($request->getBodyParam('assetIds', [])),
         ]);
 
@@ -121,15 +151,65 @@ class ComposeForm extends Model
      */
     public static function fromSend(Send $send): self
     {
-        $config = $send->recipientsConfig;
+        $form = self::fromRecipientsConfig($send->recipientsConfig);
+        $form->subject = $send->subject;
+        $form->bodyJson = $send->bodyJson ?: '[]';
+        $form->fromName = (string)$send->fromName;
+        $form->fromEmail = $send->fromEmail;
+        $form->replyTo = (string)$send->replyTo;
+        $form->embedImages = (bool)($send->settingsSnapshot['embedImages'] ?? false);
+        $form->assetIds = array_values(array_filter(array_map(
+            fn(array $attachment) => $attachment['assetId'] ?? null,
+            array_filter($send->attachments, fn(array $attachment) => ($attachment['source'] ?? null) === 'asset'),
+        )));
 
+        return $form;
+    }
+
+
+    /**
+     * Returns the form’s data for saving as a draft or template. Uploads aren’t included.
+     */
+    public function toData(): array
+    {
+        return [
+            'subject' => $this->subject,
+            'bodyJson' => $this->bodyJson,
+            'fromName' => $this->fromName,
+            'fromEmail' => $this->fromEmail,
+            'replyTo' => $this->replyTo,
+            'embedImages' => $this->embedImages,
+            'sendAt' => $this->sendAt?->format(DATE_ATOM),
+            'recipientsConfig' => $this->getRecipientsConfig(),
+            'assetIds' => $this->assetIds,
+        ];
+    }
+
+    /**
+     * Creates a form from saved draft or template data.
+     */
+    public static function fromData(array $data): self
+    {
+        $config = $data['recipientsConfig'] ?? [];
+        $form = self::fromRecipientsConfig($config);
+        $form->subject = (string)($data['subject'] ?? '');
+        $form->bodyJson = (string)($data['bodyJson'] ?? '[]');
+        $form->fromName = (string)($data['fromName'] ?? '');
+        $form->fromEmail = (string)($data['fromEmail'] ?? '');
+        $form->replyTo = (string)($data['replyTo'] ?? '');
+        $form->embedImages = (bool)($data['embedImages'] ?? false);
+        $form->sendAt = !empty($data['sendAt']) ? (DateTimeHelper::toDateTime($data['sendAt']) ?: null) : null;
+        $form->assetIds = array_values(array_map('intval', (array)($data['assetIds'] ?? [])));
+
+        return $form;
+    }
+
+    /**
+     * Creates a form with the recipients from a stored recipients config.
+     */
+    private static function fromRecipientsConfig(array $config): self
+    {
         return new self([
-            'subject' => $send->subject,
-            'bodyJson' => $send->bodyJson ?: '[]',
-            'fromName' => (string)$send->fromName,
-            'fromEmail' => $send->fromEmail,
-            'replyTo' => (string)$send->replyTo,
-            'embedImages' => (bool)($send->settingsSnapshot['embedImages'] ?? false),
             'sendToCustom' => !empty($config['custom']['enabled']),
             'customTo' => implode(', ', array_map([AddressParser::class, 'format'], $config['custom']['to'] ?? [])),
             'customCc' => implode(', ', array_map([AddressParser::class, 'format'], $config['custom']['cc'] ?? [])),
@@ -138,10 +218,9 @@ class ComposeForm extends Model
             'groupIds' => $config['groups']['ids'] ?? [],
             'sendToUsers' => !empty($config['users']['enabled']),
             'userIds' => $config['users']['ids'] ?? [],
-            'assetIds' => array_values(array_filter(array_map(
-                fn(array $attachment) => $attachment['assetId'] ?? null,
-                array_filter($send->attachments, fn(array $attachment) => ($attachment['source'] ?? null) === 'asset'),
-            ))),
+            'sendToCondition' => !empty($config['condition']['enabled']),
+            'userConditionConfig' => $config['condition']['config'] ?? [],
+            'respectUnsubscribes' => (bool)($config['respectUnsubscribes'] ?? true),
         ]);
     }
 
@@ -237,7 +316,35 @@ class ComposeForm extends Model
                 'enabled' => $this->sendToUsers,
                 'ids' => $this->sendToUsers ? $this->userIds : [],
             ],
+            'condition' => [
+                'enabled' => $this->sendToCondition,
+                'config' => $this->sendToCondition ? ($this->getUserCondition()?->getConfig() ?? []) : [],
+            ],
+            'respectUnsubscribes' => $this->respectUnsubscribes,
         ];
+    }
+
+    /**
+     * Returns the user condition, creating an empty one if there’s no config yet.
+     *
+     * Returns `null` if the posted config is invalid.
+     */
+    public function getUserCondition(): ?UserCondition
+    {
+        if ($this->_userCondition === null) {
+            try {
+                $config = $this->userConditionConfig;
+                $condition = $config
+                    ? Craft::$app->getConditions()->createCondition(['class' => UserCondition::class] + $config)
+                    : User::createCondition();
+                $this->_userCondition = $condition instanceof UserCondition ? $condition : false;
+            } catch (\Throwable $e) {
+                Craft::warning('Invalid user condition: ' . $e->getMessage(), __METHOD__);
+                $this->_userCondition = false;
+            }
+        }
+
+        return $this->_userCondition ?: null;
     }
 
     /**
@@ -271,6 +378,7 @@ class ComposeForm extends Model
             'fromName' => Craft::t('mailer', 'Sender Name'),
             'fromEmail' => Craft::t('mailer', 'Sender Email'),
             'replyTo' => Craft::t('mailer', 'Reply-To'),
+            'sendAt' => Craft::t('mailer', 'Send Later'),
             'customTo' => Craft::t('mailer', 'To'),
             'customCc' => Craft::t('mailer', 'CC'),
             'customBcc' => Craft::t('mailer', 'BCC'),
@@ -290,6 +398,7 @@ class ComposeForm extends Model
             [['subject', 'fromName'], 'match', 'not' => true, 'pattern' => '/[\r\n]/', 'message' => Craft::t('mailer', '{attribute} cannot contain line breaks.')],
             [['fromEmail', 'replyTo'], fn(string $attribute) => $this->validateEmail($attribute)],
             [['bodyJson'], fn() => $this->validateBody()],
+            [['sendAt'], fn() => $this->validateSendAt()],
             [['customTo'], fn() => $this->validateRecipients(), 'skipOnEmpty' => false],
         ];
     }
@@ -305,6 +414,21 @@ class ComposeForm extends Model
         }
     }
 
+    private function validateSendAt(): void
+    {
+        if ($this->sendAt === null) {
+            return;
+        }
+
+        $timestamp = $this->sendAt->getTimestamp();
+
+        if ($timestamp < time() + 60) {
+            $this->addError('sendAt', Craft::t('mailer', 'Choose a time in the future, or leave this blank to send now.'));
+        } elseif ($timestamp > time() + 366 * 86400) {
+            $this->addError('sendAt', Craft::t('mailer', 'Emails can’t be scheduled more than a year ahead.'));
+        }
+    }
+
     private function validateBody(): void
     {
         if (strlen($this->bodyJson) > 1048576) {
@@ -316,7 +440,7 @@ class ComposeForm extends Model
 
     private function validateRecipients(): void
     {
-        if (!$this->sendToCustom && !$this->sendToGroups && !$this->sendToUsers) {
+        if (!$this->sendToCustom && !$this->sendToGroups && !$this->sendToUsers && !$this->sendToCondition) {
             $this->addError('recipients', Craft::t('mailer', 'Choose at least one type of recipient.'));
             return;
         }
@@ -345,6 +469,16 @@ class ComposeForm extends Model
 
         if ($this->sendToUsers && empty($this->userIds)) {
             $this->addError('userIds', Craft::t('mailer', 'Select at least one user.'));
+        }
+
+        if ($this->sendToCondition) {
+            $condition = $this->getUserCondition();
+
+            if (!$condition) {
+                $this->addError('userCondition', Craft::t('mailer', 'The conditions couldn’t be read. Please set them again.'));
+            } elseif (!$condition->getConditionRules()) {
+                $this->addError('userCondition', Craft::t('mailer', 'Add at least one rule.'));
+            }
         }
     }
 
