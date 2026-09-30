@@ -1,4 +1,4 @@
-import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ as u,a as d,d as f,f as p,g as m,h,i as g,j as _,k as v,m as y,p as b,t as x,z as S}from"./form-fixes-CywpqJy7.js";var C=r`
+import{B as e,D as t,E as n,F as r,I as i,L as a,M as o,N as s,O as c,P as l,R as u,d,f,h as p,k as m,l as h,m as g,n as _,p as v,r as y,u as b,z as x}from"./dialogs-dAMbL0t1.js";var S=e`
     @layer pk-component {
         :host {
             display: inline-flex;
@@ -226,11 +226,11 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
             opacity: 0;
         }
     }
-`,w=l`
+`,C=x`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" aria-hidden="true">
         <path fill="currentColor" d="M557.5 192L534.9 214.6L278.9 470.6C266.4 483.1 246.1 483.1 233.6 470.6L105.6 342.6L83 320L128.3 274.7C129.6 276 172.3 318.7 256.3 402.7L489.7 169.3L512.3 146.7L557.6 192z" />
     </svg>
-`,T=class extends e{constructor(...e){super(...e),this.assumeInteractionOn=[`change`],this.hasSlotController=new o(this,`instructions`,`hint`),this.checked=!1,this.defaultChecked=!1,this.invalid=!1,this.size=`default`,this.value=`on`,this.label=``,this.instructions=``}static{this.shadowRootOptions={mode:`open`,delegatesFocus:!0}}static{this.styles=[u,C]}static get validators(){return[...super.validators,h(),v({validationProperty:`checked`})]}connectedCallback(){this.instructions=y(this,this.instructions),super.connectedCallback()}get validationTarget(){return this.input}syncFormValue(){this.setFormValue(this.checked?this.value:null,this.checked?`on`:`off`)}resetToDefaultValue(){this.checked=this.defaultChecked}restoreFormState(e){this.checked=e===`on`||e===this.value}updated(e){this.input&&e.has(`checked`)&&(this.input.checked=this.checked),super.updated(e)}click(){this.switchElement?.click()}focus(e){this.switchElement?.focus(e)}blur(){this.switchElement?.blur()}toggle(){this.disabled||(this.checked=!this.checked,this.emitCheckedChange())}handleKeyDown(e){let t=this.matches(`:dir(rtl)`);if(e.key===` `||e.key===`Enter`){e.preventDefault(),this.toggle();return}if(e.key===`ArrowLeft`){e.preventDefault(),this.checked=t,this.emitCheckedChange();return}e.key===`ArrowRight`&&(e.preventDefault(),this.checked=!t,this.emitCheckedChange())}emitCheckedChange(){this.hasInteracted=!0,this.dispatchEvent(new CustomEvent(`pk-change`,{detail:{checked:this.checked},bubbles:!0,composed:!0})),this.dispatchEvent(new Event(`input`,{bubbles:!0,composed:!0})),this.dispatchEvent(new Event(`change`,{bubbles:!0,composed:!0}))}handleLabelClick(e){this.disabled||e.target===this.switchElement||this.toggle()}hasLabelContent(){if(this.label)return!0;let e=this.shadowRoot?.querySelector(`slot:not([name])`);return e?e.assignedNodes({flatten:!0}).some(e=>e.nodeType===Node.TEXT_NODE?!!e.textContent?.trim():e.nodeType===Node.ELEMENT_NODE):!1}render(){let e=b((e,t)=>this.hasSlotController.test(e,t),this.instructions),n=this.hasLabelContent();return l`
+`,w=class extends c{constructor(...e){super(...e),this.assumeInteractionOn=[`change`],this.hasSlotController=new n(this,`instructions`,`hint`),this.checked=!1,this.defaultChecked=!1,this.invalid=!1,this.size=`default`,this.value=`on`,this.label=``,this.instructions=``}static{this.shadowRootOptions={mode:`open`,delegatesFocus:!0}}static{this.styles=[p,S]}static get validators(){return[...super.validators,v(),t({validationProperty:`checked`})]}connectedCallback(){this.instructions=f(this,this.instructions),super.connectedCallback()}get validationTarget(){return this.input}syncFormValue(){this.setFormValue(this.checked?this.value:null,this.checked?`on`:`off`)}resetToDefaultValue(){this.checked=this.defaultChecked}restoreFormState(e){this.checked=e===`on`||e===this.value}updated(e){this.input&&e.has(`checked`)&&(this.input.checked=this.checked),super.updated(e)}click(){this.switchElement?.click()}focus(e){this.switchElement?.focus(e)}blur(){this.switchElement?.blur()}toggle(){this.disabled||(this.checked=!this.checked,this.emitCheckedChange())}handleKeyDown(e){let t=this.matches(`:dir(rtl)`);if(e.key===` `||e.key===`Enter`){e.preventDefault(),this.toggle();return}if(e.key===`ArrowLeft`){e.preventDefault(),this.checked=t,this.emitCheckedChange();return}e.key===`ArrowRight`&&(e.preventDefault(),this.checked=!t,this.emitCheckedChange())}emitCheckedChange(){this.hasInteracted=!0,this.dispatchEvent(new CustomEvent(`pk-change`,{detail:{checked:this.checked},bubbles:!0,composed:!0})),this.dispatchEvent(new Event(`input`,{bubbles:!0,composed:!0})),this.dispatchEvent(new Event(`change`,{bubbles:!0,composed:!0}))}handleLabelClick(e){this.disabled||e.target===this.switchElement||this.toggle()}hasLabelContent(){if(this.label)return!0;let e=this.shadowRoot?.querySelector(`slot:not([name])`);return e?e.assignedNodes({flatten:!0}).some(e=>e.nodeType===Node.TEXT_NODE?!!e.textContent?.trim():e.nodeType===Node.ELEMENT_NODE):!1}render(){let e=d((e,t)=>this.hasSlotController.test(e,t),this.instructions),t=this.hasLabelContent();return x`
             <div part="base" class="base">
                 <button
                     part="switch"
@@ -239,13 +239,13 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
                     role="switch"
                     ?disabled=${this.disabled}
                     aria-checked=${this.checked?`true`:`false`}
-                    aria-invalid=${this.invalid?`true`:t}
-                    aria-describedby=${e?`instructions`:t}
-                    aria-labelledby=${n?`label`:t}
+                    aria-invalid=${this.invalid?`true`:u}
+                    aria-describedby=${e?`instructions`:u}
+                    aria-labelledby=${t?`label`:u}
                     @click=${this.toggle}
                     @keydown=${this.handleKeyDown}
                 >
-                    <span part="thumb" class="thumb">${w}</span>
+                    <span part="thumb" class="thumb">${C}</span>
                 </button>
                 <input
                     part="input"
@@ -256,26 +256,26 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
                     ?disabled=${this.disabled}
                     ?required=${this.required}
                     value=${this.value}
-                    aria-invalid=${this.invalid?`true`:t}
+                    aria-invalid=${this.invalid?`true`:u}
                     @change=${e=>e.stopPropagation()}
                 />
-                ${n||e?l`
+                ${t||e?x`
                         <div class="content" @click=${this.handleLabelClick}>
-                            ${n?l`
+                            ${t?x`
                                     <span part="label" class="label" id="label">
                                         <slot></slot>${this.label}
                                     </span>
-                                `:t}
-                            ${e?l`
+                                `:u}
+                            ${e?x`
                                     <span part="instructions" class="instructions form-control__instructions" id="instructions">
                                         <slot name="instructions">${this.instructions}</slot>
                                         <slot name="hint"></slot>
                                     </span>
-                                `:t}
+                                `:u}
                         </div>
-                    `:t}
+                    `:u}
             </div>
-        `}};n([S({type:Boolean,reflect:!0})],T.prototype,`checked`,void 0),n([S({attribute:`default-checked`,type:Boolean})],T.prototype,`defaultChecked`,void 0),n([S({type:Boolean,reflect:!0})],T.prototype,`invalid`,void 0),n([S({reflect:!0})],T.prototype,`size`,void 0),n([S()],T.prototype,`value`,void 0),n([S()],T.prototype,`label`,void 0),n([S()],T.prototype,`instructions`,void 0),n([a(`.input`)],T.prototype,`input`,void 0),n([a(`[part="switch"]`)],T.prototype,`switchElement`,void 0),T=n([i(`pk-lightswitch`)],T);var E=r`
+        `}};s([a({type:Boolean,reflect:!0})],w.prototype,`checked`,void 0),s([a({attribute:`default-checked`,type:Boolean})],w.prototype,`defaultChecked`,void 0),s([a({type:Boolean,reflect:!0})],w.prototype,`invalid`,void 0),s([a({reflect:!0})],w.prototype,`size`,void 0),s([a()],w.prototype,`value`,void 0),s([a()],w.prototype,`label`,void 0),s([a()],w.prototype,`instructions`,void 0),s([r(`.input`)],w.prototype,`input`,void 0),s([r(`[part="switch"]`)],w.prototype,`switchElement`,void 0),w=s([l(`pk-lightswitch`)],w);var T=e`
     @layer pk-component {
         :host {
             display: inline-block;
@@ -333,24 +333,24 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
             box-shadow: inset 0 0 0 2px var(--pk-status-ring, var(--pk-color-gray-500));
         }
     }
-`,D=class extends s{constructor(...e){super(...e),this.status=`on`,this.ariaLabel=null}static{this.styles=E}render(){return l`
+`,E=class extends o{constructor(...e){super(...e),this.status=`on`,this.ariaLabel=null}static{this.styles=T}render(){return x`
             <span
                 part="base"
                 class="status"
                 role="status"
-                aria-label=${this.ariaLabel??t}
+                aria-label=${this.ariaLabel??u}
             ></span>
-        `}};n([S({reflect:!0})],D.prototype,`status`,void 0),n([S({attribute:`aria-label`})],D.prototype,`ariaLabel`,void 0),D=n([i(`pk-status`)],D);var O=class extends s{constructor(...e){super(...e),this.value=``,this.disabled=!1,this.selected=!1,this.focusIndex=-1}focusControl(){this.shadowRoot?.querySelector(`.trigger`)?.focus()}handleClick(){this.disabled||this.dispatchEvent(new CustomEvent(`pk-tab-select`,{detail:{value:this.value},bubbles:!0,composed:!0}))}handleKeyDown(e){this.dispatchEvent(new CustomEvent(`pk-tab-keydown`,{detail:{event:e,value:this.value},bubbles:!0,composed:!0}))}renderTrigger(e){return l`
+        `}};s([a({reflect:!0})],E.prototype,`status`,void 0),s([a({attribute:`aria-label`})],E.prototype,`ariaLabel`,void 0),E=s([l(`pk-status`)],E);var D=class extends o{constructor(...e){super(...e),this.value=``,this.disabled=!1,this.selected=!1,this.focusIndex=-1}focusControl(){this.shadowRoot?.querySelector(`.trigger`)?.focus()}handleClick(){this.disabled||this.dispatchEvent(new CustomEvent(`pk-tab-select`,{detail:{value:this.value},bubbles:!0,composed:!0}))}handleKeyDown(e){this.dispatchEvent(new CustomEvent(`pk-tab-keydown`,{detail:{event:e,value:this.value},bubbles:!0,composed:!0}))}renderTrigger(e){return x`
             <button
                 part="trigger"
                 type="button"
                 class=${e}
                 role="tab"
                 ?disabled=${this.disabled}
-                aria-disabled=${this.disabled?`true`:t}
+                aria-disabled=${this.disabled?`true`:u}
                 aria-selected=${this.selected?`true`:`false`}
                 tabindex=${this.focusIndex}
-                aria-controls=${this.panelId??t}
+                aria-controls=${this.panelId??u}
                 @click=${this.handleClick}
                 @keydown=${this.handleKeyDown}
             >
@@ -364,7 +364,7 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
                     <slot name="status"></slot>
                 </span>
             </button>
-        `}};n([S()],O.prototype,`value`,void 0),n([S({type:Boolean,reflect:!0})],O.prototype,`disabled`,void 0),n([S({type:Boolean,reflect:!0})],O.prototype,`selected`,void 0),n([S({type:Number,attribute:`focus-index`})],O.prototype,`focusIndex`,void 0),n([S()],O.prototype,`panelId`,void 0);var k=r`
+        `}};s([a()],D.prototype,`value`,void 0),s([a({type:Boolean,reflect:!0})],D.prototype,`disabled`,void 0),s([a({type:Boolean,reflect:!0})],D.prototype,`selected`,void 0),s([a({type:Number,attribute:`focus-index`})],D.prototype,`focusIndex`,void 0),s([a()],D.prototype,`panelId`,void 0);var O=e`
     @layer pk-component {
         :host {
             /* Size to the shadow trigger. Prefer flex-start so a short list line
@@ -535,19 +535,19 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
             --pk-tabs-trigger-status-color: inherit;
         }
     }
-`,A=class extends O{static{this.styles=k}render(){return this.renderTrigger(`trigger pk-tabs__trigger`)}};A=n([i(`pk-tab`)],A);var j=class extends s{constructor(...e){super(...e),this.value=``,this.hidden=!0}renderPanel(e){return l`
+`,k=class extends D{static{this.styles=O}render(){return this.renderTrigger(`trigger pk-tabs__trigger`)}};k=s([l(`pk-tab`)],k);var A=class extends o{constructor(...e){super(...e),this.value=``,this.hidden=!0}renderPanel(e){return x`
             <div
                 part="content"
                 class=${e}
                 role="tabpanel"
-                id=${this.tabId??t}
-                aria-labelledby=${this.tabId??t}
+                id=${this.tabId??u}
+                aria-labelledby=${this.tabId??u}
                 aria-hidden=${this.hidden?`true`:`false`}
-                tabindex=${this.hidden?t:`0`}
+                tabindex=${this.hidden?u:`0`}
             >
                 <slot></slot>
             </div>
-        `}};n([S()],j.prototype,`value`,void 0),n([S({type:Boolean,reflect:!0})],j.prototype,`hidden`,void 0),n([S()],j.prototype,`tabId`,void 0);var M=r`
+        `}};s([a()],A.prototype,`value`,void 0),s([a({type:Boolean,reflect:!0})],A.prototype,`hidden`,void 0),s([a()],A.prototype,`tabId`,void 0);var j=e`
     @layer pk-component {
         :host {
             /* Flex column so .content can own overflow when the host is height-capped
@@ -582,7 +582,7 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
             border-radius: var(--pk-radius-sm);
         }
     }
-`,N=class extends j{static{this.styles=M}render(){return this.renderPanel(`content pk-tabs__content`)}};N=n([i(`pk-tab-panel`)],N);var P=r`
+`,M=class extends A{static{this.styles=j}render(){return this.renderPanel(`content pk-tabs__content`)}};M=s([l(`pk-tab-panel`)],M);var N=e`
     @layer pk-component {
         :host {
             display: block;
@@ -970,21 +970,21 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
             --pk-tabs-trigger-status-color: var(--pk-color-gray-300);
         }
     }
-`,F=class extends s{constructor(...e){super(...e),this.value=``,this.variant=`default`,this.orientation=`horizontal`,this.placement=`top`,this.activation=`manual`,this.disabled=!1,this.ariaLabel=null,this.baseId=m(`pk-tabs`),this.tabs=[],this.panels=[],this.focusedValue=``,this.syncTabs=()=>{let e=this.shadowRoot?.querySelector(`slot[name="nav"]`);e&&(this.tabs=e.assignedElements({flatten:!0}).filter(e=>e.tagName===`PK-TAB`),this.ensureDefaultValue(),this.applySelection())},this.syncPanels=()=>{let e=this.shadowRoot?.querySelector(`slot:not([name])`);e&&(this.panels=e.assignedElements({flatten:!0}).filter(e=>e.tagName===`PK-TAB-PANEL`),this.applySelection())},this.handleTabSelect=e=>{if(!this.isOwnTabEvent(e)||this.disabled)return;e.stopPropagation();let{value:t}=e.detail;if(t===this.value&&this.activation===`manual`){this.focusedValue=t,this.applySelection();return}t!==this.value&&this.selectTab(t)},this.handleTabKeyDown=e=>{if(!this.isOwnTabEvent(e))return;e.stopPropagation();let t=e.detail.event,n=this.getEnabledTabs();if(n.length===0)return;let r=n.findIndex(t=>t.value===e.detail.value);if(r<0)return;let i=r,a=this.getEffectiveOrientation()===`horizontal`;switch(t.key){case`ArrowDown`:if(a)return;t.preventDefault(),i=r>=n.length-1?0:r+1;break;case`ArrowUp`:if(a)return;t.preventDefault(),i=r<=0?n.length-1:r-1;break;case`ArrowRight`:if(!a)return;t.preventDefault(),i=r>=n.length-1?0:r+1;break;case`ArrowLeft`:if(!a)return;t.preventDefault(),i=r<=0?n.length-1:r-1;break;case`Home`:t.preventDefault(),i=0;break;case`End`:t.preventDefault(),i=n.length-1;break;default:return}let o=n[i];o&&(this.activation===`auto`?o.value===this.value?o.focusControl():this.selectTab(o.value):(this.focusedValue=o.value,this.applySelection(),o.focusControl()))}}static{this.styles=P}connectedCallback(){super.connectedCallback(),this.addEventListener(`pk-tab-select`,this.handleTabSelect),this.addEventListener(`pk-tab-keydown`,this.handleTabKeyDown)}disconnectedCallback(){this.removeEventListener(`pk-tab-select`,this.handleTabSelect),this.removeEventListener(`pk-tab-keydown`,this.handleTabKeyDown),super.disconnectedCallback()}updated(e){(e.has(`value`)||e.has(`disabled`)||e.has(`activation`))&&(e.has(`value`)&&(this.focusedValue=this.value),this.applySelection())}ensureDefaultValue(){if(this.value||this.tabs.length===0)return;let e=this.tabs.find(e=>!e.disabled&&!this.disabled);e&&(this.value=e.value,this.focusedValue=this.value)}getEnabledTabs(){return this.tabs.filter(e=>!e.disabled&&!this.disabled)}getEffectiveOrientation(){return this.variant===`sidebar`?`vertical`:this.orientation}getEffectivePlacement(){return this.variant===`sidebar`&&(this.placement===`top`||this.placement===`bottom`)?`start`:this.placement}applySelection(){let e=this.getAttribute(`data-current-value`)??``,t=this.activation===`manual`?this.focusedValue:this.value;for(let e of this.tabs){let n=e.value===this.value,r=`${this.baseId}-tab-${e.value}`,i=`${this.baseId}-panel-${e.value}`;e.selected=n,e.disabled=this.disabled||e.hasAttribute(`disabled`),e.focusIndex=e.value===t?0:-1,e.panelId=i,e.id=r}for(let t of this.panels){let n=t.value===this.value,r=`${this.baseId}-tab-${t.value}`,i=`${this.baseId}-panel-${t.value}`;t.hidden!==!n&&(n?this.dispatchEvent(new CustomEvent(`pk-tab-show`,{detail:{value:t.value},bubbles:!0,composed:!0})):e===t.value&&this.dispatchEvent(new CustomEvent(`pk-tab-hide`,{detail:{value:t.value},bubbles:!0,composed:!0}))),t.hidden=!n,t.tabId=r,t.id=i}this.setAttribute(`data-current-value`,this.value)}isOwnTabEvent(e){let t=e.target;return t instanceof HTMLElement&&t.tagName===`PK-TAB`&&this.tabs.includes(t)}selectTab(e){this.value=e,this.focusedValue=e,this.applySelection(),this.dispatchEvent(new CustomEvent(`pk-change`,{detail:{value:this.value},bubbles:!0,composed:!0}))}render(){let e=this.getEffectiveOrientation();return l`
+`,P=class extends o{constructor(...e){super(...e),this.value=``,this.variant=`default`,this.orientation=`horizontal`,this.placement=`top`,this.activation=`manual`,this.disabled=!1,this.ariaLabel=null,this.baseId=g(`pk-tabs`),this.tabs=[],this.panels=[],this.focusedValue=``,this.syncTabs=()=>{let e=this.shadowRoot?.querySelector(`slot[name="nav"]`);e&&(this.tabs=e.assignedElements({flatten:!0}).filter(e=>e.tagName===`PK-TAB`),this.ensureDefaultValue(),this.applySelection())},this.syncPanels=()=>{let e=this.shadowRoot?.querySelector(`slot:not([name])`);e&&(this.panels=e.assignedElements({flatten:!0}).filter(e=>e.tagName===`PK-TAB-PANEL`),this.applySelection())},this.handleTabSelect=e=>{if(!this.isOwnTabEvent(e)||this.disabled)return;e.stopPropagation();let{value:t}=e.detail;if(t===this.value&&this.activation===`manual`){this.focusedValue=t,this.applySelection();return}t!==this.value&&this.selectTab(t)},this.handleTabKeyDown=e=>{if(!this.isOwnTabEvent(e))return;e.stopPropagation();let t=e.detail.event,n=this.getEnabledTabs();if(n.length===0)return;let r=n.findIndex(t=>t.value===e.detail.value);if(r<0)return;let i=r,a=this.getEffectiveOrientation()===`horizontal`;switch(t.key){case`ArrowDown`:if(a)return;t.preventDefault(),i=r>=n.length-1?0:r+1;break;case`ArrowUp`:if(a)return;t.preventDefault(),i=r<=0?n.length-1:r-1;break;case`ArrowRight`:if(!a)return;t.preventDefault(),i=r>=n.length-1?0:r+1;break;case`ArrowLeft`:if(!a)return;t.preventDefault(),i=r<=0?n.length-1:r-1;break;case`Home`:t.preventDefault(),i=0;break;case`End`:t.preventDefault(),i=n.length-1;break;default:return}let o=n[i];o&&(this.activation===`auto`?o.value===this.value?o.focusControl():this.selectTab(o.value):(this.focusedValue=o.value,this.applySelection(),o.focusControl()))}}static{this.styles=N}connectedCallback(){super.connectedCallback(),this.addEventListener(`pk-tab-select`,this.handleTabSelect),this.addEventListener(`pk-tab-keydown`,this.handleTabKeyDown)}disconnectedCallback(){this.removeEventListener(`pk-tab-select`,this.handleTabSelect),this.removeEventListener(`pk-tab-keydown`,this.handleTabKeyDown),super.disconnectedCallback()}updated(e){(e.has(`value`)||e.has(`disabled`)||e.has(`activation`))&&(e.has(`value`)&&(this.focusedValue=this.value),this.applySelection())}ensureDefaultValue(){if(this.value||this.tabs.length===0)return;let e=this.tabs.find(e=>!e.disabled&&!this.disabled);e&&(this.value=e.value,this.focusedValue=this.value)}getEnabledTabs(){return this.tabs.filter(e=>!e.disabled&&!this.disabled)}getEffectiveOrientation(){return this.variant===`sidebar`?`vertical`:this.orientation}getEffectivePlacement(){return this.variant===`sidebar`&&(this.placement===`top`||this.placement===`bottom`)?`start`:this.placement}applySelection(){let e=this.getAttribute(`data-current-value`)??``,t=this.activation===`manual`?this.focusedValue:this.value;for(let e of this.tabs){let n=e.value===this.value,r=`${this.baseId}-tab-${e.value}`,i=`${this.baseId}-panel-${e.value}`;e.selected=n,e.disabled=this.disabled||e.hasAttribute(`disabled`),e.focusIndex=e.value===t?0:-1,e.panelId=i,e.id=r}for(let t of this.panels){let n=t.value===this.value,r=`${this.baseId}-tab-${t.value}`,i=`${this.baseId}-panel-${t.value}`;t.hidden!==!n&&(n?this.dispatchEvent(new CustomEvent(`pk-tab-show`,{detail:{value:t.value},bubbles:!0,composed:!0})):e===t.value&&this.dispatchEvent(new CustomEvent(`pk-tab-hide`,{detail:{value:t.value},bubbles:!0,composed:!0}))),t.hidden=!n,t.tabId=r,t.id=i}this.setAttribute(`data-current-value`,this.value)}isOwnTabEvent(e){let t=e.target;return t instanceof HTMLElement&&t.tagName===`PK-TAB`&&this.tabs.includes(t)}selectTab(e){this.value=e,this.focusedValue=e,this.applySelection(),this.dispatchEvent(new CustomEvent(`pk-change`,{detail:{value:this.value},bubbles:!0,composed:!0}))}render(){let e=this.getEffectiveOrientation();return x`
             <div part="base" class="tabs pk-tabs" data-placement=${this.getEffectivePlacement()}>
                 <div
                     part="list"
                     class="list pk-tabs__list"
                     role="tablist"
                     aria-orientation=${e}
-                    aria-label=${this.ariaLabel??t}
+                    aria-label=${this.ariaLabel??u}
                     @slotchange=${this.syncTabs}
                 >
                     <slot name="nav"></slot>
                 </div>
                 <slot @slotchange=${this.syncPanels}></slot>
             </div>
-        `}};n([S()],F.prototype,`value`,void 0),n([S({reflect:!0})],F.prototype,`variant`,void 0),n([S({reflect:!0})],F.prototype,`orientation`,void 0),n([S({reflect:!0})],F.prototype,`placement`,void 0),n([S({reflect:!0})],F.prototype,`activation`,void 0),n([S({type:Boolean,reflect:!0})],F.prototype,`disabled`,void 0),n([S({attribute:`aria-label`})],F.prototype,`ariaLabel`,void 0),n([c()],F.prototype,`tabs`,void 0),n([c()],F.prototype,`panels`,void 0),n([c()],F.prototype,`focusedValue`,void 0),F=n([i(`pk-tabs`)],F);var I=r`
+        `}};s([a()],P.prototype,`value`,void 0),s([a({reflect:!0})],P.prototype,`variant`,void 0),s([a({reflect:!0})],P.prototype,`orientation`,void 0),s([a({reflect:!0})],P.prototype,`placement`,void 0),s([a({reflect:!0})],P.prototype,`activation`,void 0),s([a({type:Boolean,reflect:!0})],P.prototype,`disabled`,void 0),s([a({attribute:`aria-label`})],P.prototype,`ariaLabel`,void 0),s([i()],P.prototype,`tabs`,void 0),s([i()],P.prototype,`panels`,void 0),s([i()],P.prototype,`focusedValue`,void 0),P=s([l(`pk-tabs`)],P);var F=e`
     @layer pk-component {
         :host {
             display: block;
@@ -1111,9 +1111,9 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
             box-shadow: inset 0 0 0 1px var(--pk-color-rose-600);
         }
     }
-`,L=class extends e{constructor(...e){super(...e),this.assumeInteractionOn=[`blur`,`input`],this.hasSlotController=new o(this,`instructions`,`hint`,`label`),this.controlId=m(`pk-textarea`),this.placeholder=``,this._value=null,this.defaultValue=null,this.size=`default`,this.label=``,this.instructions=``,this.readonly=!1,this.invalid=!1,this.fitCell=!1,this.withLabel=!1,this.withInstructions=!1}static{this.styles=[u,I]}static get validators(){return[...super.validators,h(),v()]}get value(){return this.valueHasChanged?this._value??``:this._value??this.defaultValue??``}set value(e){let t=e??``;this._value!==t&&(this.valueHasChanged=!0,this._value=t)}connectedCallback(){this.instructions=y(this,this.instructions),this.hasAttribute(`with-hint`)&&(this.withInstructions=!0),super.connectedCallback()}syncFormValue(){this.setValue(this.value||``)}resetToDefaultValue(){this.valueHasChanged=!1,this._value=null}restoreFormState(e){typeof e==`string`&&(this.value=e)}formResetCallback(){this.valueHasChanged=!1,this._value=null,this.input&&(this.input.value=this.defaultValue??``),super.formResetCallback()}updated(e){(e.has(`value`)||e.has(`defaultValue`))&&this.setState(`blank`,!this.value),super.updated(e)}syncStandaloneAria(){if(!this.input)return;let e=this.hasLabelContent(),t=this.hasInstructionsContent();_({control:this.input,labelId:`${this.controlId}-label`,instructionsId:`${this.controlId}-instructions`,hasLabel:e,hasInstructions:t,required:this.required,invalid:this.invalid||!this.internals.validity.valid})}hasLabelContent(){return!!this.label||this.hasSlotController.test(`label`,this.withLabel)}hasInstructionsContent(){return b((e,t)=>this.hasSlotController.test(e,t),this.instructions,this.withInstructions)}focus(e){this.input?.focus(e)}blur(){this.input?.blur()}handleInput(){this.value=this.input.value,this.dispatchEvent(new Event(`input`,{bubbles:!0,composed:!0}))}handleChange(e){this.value=this.input.value,e.stopPropagation(),this.dispatchEvent(new Event(`change`,{bubbles:!0,composed:!0}))}render(){let e=this.hasLabelContent(),n=this.hasInstructionsContent();return l`
+`,I=class extends c{constructor(...e){super(...e),this.assumeInteractionOn=[`blur`,`input`],this.hasSlotController=new n(this,`instructions`,`hint`,`label`),this.controlId=g(`pk-textarea`),this.placeholder=``,this._value=null,this.defaultValue=null,this.size=`default`,this.label=``,this.instructions=``,this.readonly=!1,this.invalid=!1,this.fitCell=!1,this.withLabel=!1,this.withInstructions=!1}static{this.styles=[p,F]}static get validators(){return[...super.validators,v(),t()]}get value(){return this.valueHasChanged?this._value??``:this._value??this.defaultValue??``}set value(e){let t=e??``;this._value!==t&&(this.valueHasChanged=!0,this._value=t)}connectedCallback(){this.instructions=f(this,this.instructions),this.hasAttribute(`with-hint`)&&(this.withInstructions=!0),super.connectedCallback()}syncFormValue(){this.setValue(this.value||``)}resetToDefaultValue(){this.valueHasChanged=!1,this._value=null}restoreFormState(e){typeof e==`string`&&(this.value=e)}formResetCallback(){this.valueHasChanged=!1,this._value=null,this.input&&(this.input.value=this.defaultValue??``),super.formResetCallback()}updated(e){(e.has(`value`)||e.has(`defaultValue`))&&this.setState(`blank`,!this.value),super.updated(e)}syncStandaloneAria(){if(!this.input)return;let e=this.hasLabelContent(),t=this.hasInstructionsContent();m({control:this.input,labelId:`${this.controlId}-label`,instructionsId:`${this.controlId}-instructions`,hasLabel:e,hasInstructions:t,required:this.required,invalid:this.invalid||!this.internals.validity.valid})}hasLabelContent(){return!!this.label||this.hasSlotController.test(`label`,this.withLabel)}hasInstructionsContent(){return d((e,t)=>this.hasSlotController.test(e,t),this.instructions,this.withInstructions)}focus(e){this.input?.focus(e)}blur(){this.input?.blur()}handleInput(){this.value=this.input.value,this.dispatchEvent(new Event(`input`,{bubbles:!0,composed:!0}))}handleChange(e){this.value=this.input.value,e.stopPropagation(),this.dispatchEvent(new Event(`change`,{bubbles:!0,composed:!0}))}render(){let e=this.hasLabelContent(),t=this.hasInstructionsContent();return x`
             <div part="form-control" class="form-control">
-                ${e?l`
+                ${e?x`
                         <label
                             part="label"
                             class="form-control__label"
@@ -1122,9 +1122,9 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
                         >
                             <slot name="label">${this.label}</slot>
                         </label>
-                    `:t}
+                    `:u}
 
-                ${n?l`
+                ${t?x`
                         <p
                             part="instructions"
                             class="form-control__instructions"
@@ -1133,16 +1133,16 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
                             <slot name="instructions">${this.instructions}</slot>
                             <slot name="hint"></slot>
                         </p>
-                    `:t}
+                    `:u}
 
                 <textarea
                     part="textarea"
                     class="textarea"
-                    id=${e?`${this.controlId}-control`:t}
-                    rows=${p(this.fitCell?this.rows??1:this.rows)}
-                    .value=${f(this.value)}
-                    placeholder=${this.placeholder||t}
-                    maxlength=${p(this.maxlength)}
+                    id=${e?`${this.controlId}-control`:u}
+                    rows=${b(this.fitCell?this.rows??1:this.rows)}
+                    .value=${h(this.value)}
+                    placeholder=${this.placeholder||u}
+                    maxlength=${b(this.maxlength)}
                     ?disabled=${this.disabled}
                     ?readonly=${this.readonly}
                     ?required=${this.required}
@@ -1152,4 +1152,4 @@ import{A as e,B as t,F as n,H as r,I as i,L as a,O as o,P as s,R as c,V as l,_ a
                     @blur=${()=>this.dispatchEvent(new Event(`blur`,{bubbles:!0,composed:!0}))}
                 ></textarea>
             </div>
-        `}};n([a(`textarea`)],L.prototype,`input`,void 0),n([S()],L.prototype,`placeholder`,void 0),n([c()],L.prototype,`value`,null),n([S({attribute:`value`,reflect:!0})],L.prototype,`defaultValue`,void 0),n([S({reflect:!0})],L.prototype,`size`,void 0),n([S()],L.prototype,`label`,void 0),n([S()],L.prototype,`instructions`,void 0),n([S({type:Boolean,reflect:!0})],L.prototype,`readonly`,void 0),n([S({type:Boolean,reflect:!0})],L.prototype,`invalid`,void 0),n([S({type:Boolean,reflect:!0,attribute:`fit-cell`})],L.prototype,`fitCell`,void 0),n([S({type:Number})],L.prototype,`rows`,void 0),n([S({type:Number,attribute:`max-length`})],L.prototype,`maxlength`,void 0),n([S({attribute:`with-label`,type:Boolean})],L.prototype,`withLabel`,void 0),n([S({attribute:`with-instructions`,type:Boolean})],L.prototype,`withInstructions`,void 0),L=n([i(`pk-textarea`)],L);function R(){x(),d(),g();let e=document.querySelector(`[data-mailer-autorefresh]`);if(e){let t=Math.max(5,Number(e.dataset.mailerAutorefresh)||10);window.setTimeout(function e(){if(document.querySelector(`pk-dialog[open]`)){window.setTimeout(e,t*1e3);return}window.location.reload()},t*1e3)}}export{R as init};
+        `}};s([r(`textarea`)],I.prototype,`input`,void 0),s([a()],I.prototype,`placeholder`,void 0),s([i()],I.prototype,`value`,null),s([a({attribute:`value`,reflect:!0})],I.prototype,`defaultValue`,void 0),s([a({reflect:!0})],I.prototype,`size`,void 0),s([a()],I.prototype,`label`,void 0),s([a()],I.prototype,`instructions`,void 0),s([a({type:Boolean,reflect:!0})],I.prototype,`readonly`,void 0),s([a({type:Boolean,reflect:!0})],I.prototype,`invalid`,void 0),s([a({type:Boolean,reflect:!0,attribute:`fit-cell`})],I.prototype,`fitCell`,void 0),s([a({type:Number})],I.prototype,`rows`,void 0),s([a({type:Number,attribute:`max-length`})],I.prototype,`maxlength`,void 0),s([a({attribute:`with-label`,type:Boolean})],I.prototype,`withLabel`,void 0),s([a({attribute:`with-instructions`,type:Boolean})],I.prototype,`withInstructions`,void 0),I=s([l(`pk-textarea`)],I);function L(){y(),_();let e=document.querySelector(`[data-mailer-autorefresh]`);if(e){let t=Math.max(5,Number(e.dataset.mailerAutorefresh)||10);window.setTimeout(function e(){if(document.querySelector(`pk-dialog[open]`)){window.setTimeout(e,t*1e3);return}window.location.reload()},t*1e3)}}export{L as init};

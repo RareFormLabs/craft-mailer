@@ -1,7 +1,6 @@
 import type { PkDialog, PkInput, PkLightswitch, PkTiptapEditor } from './components';
 import { errorMessage, notifyError, notifySuccess, postAction, t } from './craft';
 import { confirmDialog as confirmAction } from './dialogs';
-import { syncCheckedFormValues } from './form-fixes';
 
 type Summary = {
     total: number;
@@ -205,7 +204,6 @@ export function initCompose(form: HTMLFormElement): void {
         confirmDialog.querySelector('[data-mailer-confirm-submit]')?.setAttribute('loading', '');
         form.querySelector('[data-mailer-send]')?.classList.add('loading');
         // Native submit: skips the submit event (and our interception) and includes the form-associated elements.
-        syncCheckedFormValues(form);
         form.submit();
     });
 
@@ -412,7 +410,6 @@ export function initCompose(form: HTMLFormElement): void {
  * Builds the form data for an async request.
  */
 function formData(form: HTMLFormElement, includeUploads: boolean): FormData {
-    syncCheckedFormValues(form);
     const data = new FormData(form);
     data.delete('action');
     data.delete('confirmed');
@@ -460,7 +457,6 @@ function applyTemplate(form: HTMLFormElement, editor: PkTiptapEditor | null, dat
 
     if (embed && data.embedImages !== undefined && embed.checked !== data.embedImages) {
         embed.checked = data.embedImages;
-        (embed as unknown as { syncFormValue?: () => void }).syncFormValue?.();
     }
 }
 

@@ -1,5 +1,9 @@
 # Release Notes for Mailer
 
+## 1.0.1 - Unreleased
+
+- Updated Plugin Kit to 2.0.22, which fixes checkbox and lightswitch values not updating when toggled ([verbb/plugin-kit#1](https://github.com/verbb/plugin-kit/issues/1)) and linking to Craft elements from the message editor. Mailer’s workaround has been removed.
+
 ## 1.0.0 - 2026-09-27
 
 - Initial release.

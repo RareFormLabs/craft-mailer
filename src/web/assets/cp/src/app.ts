@@ -3,13 +3,11 @@
  */
 import { components } from './components';
 import { initConfirmForms, initDialogCloseButtons } from './dialogs';
-import { initCheckedFormValueFix } from './form-fixes';
 
 // Referenced so bundlers keep every component definition.
 void components;
 
 export function init(): void {
-    initCheckedFormValueFix();
     initDialogCloseButtons();
     initConfirmForms();
 
